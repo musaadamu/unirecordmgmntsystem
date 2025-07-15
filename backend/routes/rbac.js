@@ -3,8 +3,6 @@ const router = express.Router();
 
 // Import controllers
 const rbacController = require('../controllers/rbacController');
-const userPermissionController = require('../controllers/userPermissionController');
-const auditController = require('../controllers/auditController');
 
 // Import middleware
 const { 
@@ -154,110 +152,12 @@ router.delete('/user-roles/:id',
 );
 
 /**
- * User Permission Query Routes
- */
-
-// GET /api/admin/user-permissions/:userId - Get user's effective permissions
-router.get('/user-permissions/:userId',
-  requireAnyPermission(['users:read', 'roles:read']),
-  userPermissionController.getUserPermissionsController
-);
-
-// POST /api/admin/user-permissions/:userId/check - Check if user has specific permission
-router.post('/user-permissions/:userId/check',
-  requirePermission('permissions:read'),
-  userPermissionController.checkUserPermission
-);
-
-// GET /api/admin/user-permissions/matrix - Get permission matrix
-router.get('/user-permissions/matrix',
-  requirePermission('roles:read'),
-  userPermissionController.getPermissionMatrix
-);
-
-// GET /api/admin/user-permissions/:userId/history - Get user's role history
-router.get('/user-permissions/:userId/history',
-  requirePermission('audit:read'),
-  userPermissionController.getUserRoleHistory
-);
-
-// GET /api/admin/user-permissions/:userId/summary - Get user permission summary
-router.get('/user-permissions/:userId/summary',
-  requireAnyPermission(['users:read', 'roles:read']),
-  userPermissionController.getUserPermissionSummary
-);
-
-// GET /api/admin/user-permissions/expiring - Get expiring role assignments
-router.get('/user-permissions/expiring',
-  requirePermission('roles:read'),
-  userPermissionController.getExpiringAssignments
-);
-
-// POST /api/admin/user-permissions/:userRoleId/extend - Extend role assignment
-router.post('/user-permissions/:userRoleId/extend',
-  requirePermission('roles:assign'),
-  userPermissionController.extendRoleAssignment
-);
-
-/**
- * Audit Log Routes
- */
-
-// GET /api/admin/audit-logs - Get audit logs
-router.get('/audit-logs',
-  requirePermission('audit:read'),
-  auditController.getAuditLogs
-);
-
-// GET /api/admin/audit-logs/statistics - Get audit statistics
-router.get('/audit-logs/statistics',
-  requirePermission('audit:read'),
-  auditController.getAuditStatistics
-);
-
-// GET /api/admin/audit-logs/dashboard - Get audit dashboard data
-router.get('/audit-logs/dashboard',
-  requirePermission('audit:read'),
-  auditController.getAuditDashboard
-);
-
-// GET /api/admin/audit-logs/security-incidents - Get security incidents
-router.get('/audit-logs/security-incidents',
-  requirePermission('audit:read'),
-  auditController.getSecurityIncidents
-);
-
-// GET /api/admin/audit-logs/export - Export audit logs
-router.get('/audit-logs/export',
-  requirePermission('audit:export'),
-  auditController.exportAuditLogs
-);
-
-// GET /api/admin/audit-logs/user/:userId - Get user activity
-router.get('/audit-logs/user/:userId',
-  requirePermission('audit:read'),
-  auditController.getUserActivity
-);
-
-// GET /api/admin/audit-logs/:logId - Get audit log details
-router.get('/audit-logs/:logId',
-  requirePermission('audit:read'),
-  auditController.getAuditLogDetails
-);
-
-// POST /api/admin/audit-logs/cleanup - Cleanup old audit logs
-router.post('/audit-logs/cleanup',
-  requirePermission('system:admin'),
-  auditController.cleanupAuditLogs
-);
-
-/**
  * System Administration Routes (Super Admin only)
  */
 
 // POST /api/admin/system/seed-permissions - Seed default permissions
 router.post('/system/seed-permissions',
-  requireRole('super_admin'),
+  requireRole('Super Admin'),
   async (req, res) => {
     try {
       const { seedDefaultPermissions } = require('../utils/seedData');
@@ -281,7 +181,7 @@ router.post('/system/seed-permissions',
 
 // POST /api/admin/system/seed-roles - Seed default roles
 router.post('/system/seed-roles',
-  requireRole('super_admin'),
+  requireRole('Super Admin'),
   async (req, res) => {
     try {
       const { seedDefaultRoles } = require('../utils/seedData');
@@ -303,23 +203,24 @@ router.post('/system/seed-roles',
   }
 );
 
-// POST /api/admin/system/cache/clear - Clear permission cache
-router.post('/system/cache/clear',
-  requireRole('super_admin'),
+// POST /api/admin/system/initialize-rbac - Initialize complete RBAC system
+router.post('/system/initialize-rbac',
+  requireRole('Super Admin'),
   async (req, res) => {
     try {
-      const { clearAllUserCache } = require('../middleware/rbac');
-      await clearAllUserCache();
+      const { initializeRBAC } = require('../utils/seedData');
+      const result = await initializeRBAC(req.user._id);
       
       res.json({
         success: true,
-        message: 'Permission cache cleared successfully'
+        data: result,
+        message: 'RBAC system initialized successfully'
       });
     } catch (error) {
-      console.error('Clear cache error:', error);
+      console.error('Initialize RBAC error:', error);
       res.status(500).json({
         success: false,
-        message: 'Error clearing cache',
+        message: 'Error initializing RBAC system',
         error: error.message
       });
     }

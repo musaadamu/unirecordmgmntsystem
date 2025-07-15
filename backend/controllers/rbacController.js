@@ -5,6 +5,7 @@ const PermissionGroup = require('../models/PermissionGroup');
 const AuditLog = require('../models/AuditLog');
 const User = require('../models/User');
 const { clearUserCache } = require('../middleware/rbac');
+const notificationService = require('../services/notificationService');
 
 /**
  * Permission Management Controllers
@@ -624,6 +625,20 @@ const assignRole = async (req, res) => {
     // Clear user cache
     await clearUserCache(assignmentData.userId);
 
+    // Send notification
+    await notificationService.sendNotification('role_assigned', {
+      userId: assignmentData.userId,
+      roleId: assignmentData.roleId,
+      assignedBy: req.user._id,
+      expiresAt: assignmentData.expiresAt,
+      department: assignmentData.department,
+      triggeredBy: req.user._id
+    }, {
+      ipAddress: req.ip,
+      userAgent: req.get('User-Agent'),
+      priority: 'high'
+    });
+
     res.status(201).json({
       success: true,
       data: { userRole },
@@ -659,6 +674,12 @@ const updateUserRole = async (req, res) => {
       });
     }
 
+    const oldData = {
+      expiresAt: userRole.expiresAt,
+      department: userRole.department,
+      isActive: userRole.isActive
+    };
+
     Object.assign(userRole, req.body);
     userRole._ipAddress = req.ip;
     userRole._userAgent = req.get('User-Agent');
@@ -668,6 +689,33 @@ const updateUserRole = async (req, res) => {
 
     // Clear user cache
     await clearUserCache(userRole.userId.toString());
+
+    // Send notification if significant changes
+    const hasSignificantChanges =
+      oldData.expiresAt !== userRole.expiresAt ||
+      oldData.department !== userRole.department ||
+      oldData.isActive !== userRole.isActive;
+
+    if (hasSignificantChanges) {
+      await notificationService.sendNotification('role_updated', {
+        userId: userRole.userId._id,
+        roleId: userRole.roleId._id,
+        updatedBy: req.user._id,
+        changes: {
+          old: oldData,
+          new: {
+            expiresAt: userRole.expiresAt,
+            department: userRole.department,
+            isActive: userRole.isActive
+          }
+        },
+        triggeredBy: req.user._id
+      }, {
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent'),
+        priority: 'medium'
+      });
+    }
 
     res.json({
       success: true,
@@ -697,6 +745,7 @@ const removeUserRole = async (req, res) => {
     }
 
     const userId = userRole.userId.toString();
+    const roleId = userRole.roleId.toString();
 
     userRole._ipAddress = req.ip;
     userRole._userAgent = req.get('User-Agent');
@@ -705,6 +754,19 @@ const removeUserRole = async (req, res) => {
 
     // Clear user cache
     await clearUserCache(userId);
+
+    // Send notification
+    await notificationService.sendNotification('role_removed', {
+      userId: userId,
+      roleId: roleId,
+      removedBy: req.user._id,
+      reason: req.body.reason || 'Administrative action',
+      triggeredBy: req.user._id
+    }, {
+      ipAddress: req.ip,
+      userAgent: req.get('User-Agent'),
+      priority: 'high'
+    });
 
     res.json({
       success: true,
@@ -797,6 +859,24 @@ const bulkAssignRoles = async (req, res) => {
     for (const userId of userIds) {
       await clearUserCache(userId);
     }
+
+    // Send bulk notification
+    await notificationService.sendBulkNotification('role_assigned',
+      userIds.map(userId => ({ userId })),
+      {
+        assignedBy: req.user.personalInfo.firstName + ' ' + req.user.personalInfo.lastName,
+        assignedAt: new Date().toISOString(),
+        system: {
+          name: 'University Record Management System',
+          url: process.env.FRONTEND_URL || 'http://localhost:3000',
+          supportEmail: process.env.SUPPORT_EMAIL || 'support@university.edu'
+        }
+      },
+      {
+        triggeredBy: req.user._id,
+        priority: 'medium'
+      }
+    );
 
     res.status(201).json({
       success: true,

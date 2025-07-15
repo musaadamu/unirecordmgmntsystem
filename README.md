@@ -4,10 +4,14 @@ A comprehensive university record management system built with the MERN stack, f
 
 ## 🏗️ Architecture
 
-- **Backend**: Node.js + Express.js + MongoDB
-- **Admin/Staff Portal**: React.js (Port 3001)
-- **Student Portal**: React.js (Port 3000)
+This project follows a modern full-stack architecture with clear separation of concerns:
+
+- **Backend API** (`backend/`): Node.js + Express.js + MongoDB
+- **Admin Portal** (`admin-portal/`): React.js + TypeScript (Port 3001)
+- **Student Portal** (`student-portal/`): React.js + TypeScript (Port 3000)
 - **Database**: MongoDB with Mongoose ODM
+- **Email System**: Multi-provider email notifications
+- **Queue System**: Redis + Bull for background processing
 
 ## 🚀 Features
 
@@ -25,13 +29,15 @@ A comprehensive university record management system built with the MERN stack, f
 - Fee management
 - Document access
 
-### Backend Services
-- JWT-based authentication
-- Role-based access control
-- RESTful API design
-- File upload handling
-- Email notifications
-- Audit logging
+### Backend Services (`backend/`)
+- JWT-based authentication and authorization
+- Comprehensive Role-Based Access Control (RBAC)
+- RESTful API design with Express.js
+- Secure file upload handling
+- Multi-provider email notification system
+- Complete audit logging and monitoring
+- Redis-based email queue processing
+- Database seeding and initialization scripts
 
 ## 📋 Prerequisites
 
@@ -42,52 +48,92 @@ A comprehensive university record management system built with the MERN stack, f
 
 ## 🛠️ Installation
 
+### Quick Start (Recommended)
+
 1. Clone the repository
 ```bash
 git clone <repository-url>
 cd university-record-management-system
 ```
 
-2. Install dependencies
+2. Install all dependencies
 ```bash
-npm install
+npm run install:all
 ```
 
-3. Set up environment variables
+3. Set up backend environment
 ```bash
+cd backend
 cp .env.example .env
 # Edit .env with your configuration
 ```
 
-4. Initialize the system
+4. Initialize the backend system
 ```bash
-# Initialize RBAC system and email notifications
-npm run init-all
-
-# Or initialize separately:
-npm run init-rbac
-npm run init-notifications
+npm run init:backend
 ```
 
-5. Start the development server
+5. Start development servers
 ```bash
+# Terminal 1 - Backend API
+npm run dev:backend
+
+# Terminal 2 - Admin Portal  
+npm run dev:admin
+
+# Terminal 3 - Student Portal
+npm run dev:student
+```
+
+### Manual Installation
+
+If you prefer to install each component separately:
+
+```bash
+# Backend
+cd backend
+npm install
+cp .env.example .env
+npm run init-all
+npm run dev
+
+# Admin Portal
+cd ../admin-portal
+npm install
+npm run dev
+
+# Student Portal  
+cd ../student-portal
+npm install
 npm run dev
 ```
 
 ## 📁 Project Structure
 
 ```
-├── config/           # Configuration files
-├── controllers/      # Route controllers
-├── middleware/       # Custom middleware
-├── models/          # Database models
-├── routes/          # API routes
-├── utils/           # Utility functions
-├── uploads/         # File uploads
-├── logs/           # Application logs
-├── tests/          # Test files
-├── server.js       # Main server file
-└── package.json    # Dependencies and scripts
+├── backend/              # Backend API server (Node.js/Express)
+│   ├── controllers/      # Route controllers
+│   ├── middleware/       # Custom middleware  
+│   ├── models/          # Database models (MongoDB/Mongoose)
+│   ├── routes/          # API routes
+│   ├── services/        # Business logic services
+│   ├── utils/           # Utility functions
+│   ├── scripts/         # Database and setup scripts
+│   ├── config/          # Configuration files
+│   ├── tests/           # Backend tests
+│   ├── server.js        # Main server file
+│   └── package.json     # Backend dependencies
+├── admin-portal/        # Admin frontend (React/TypeScript)
+│   ├── src/            # Source code
+│   ├── public/         # Static assets
+│   └── package.json    # Frontend dependencies
+├── student-portal/      # Student frontend (React/TypeScript)  
+│   ├── src/            # Source code
+│   ├── public/         # Static assets
+│   └── package.json    # Frontend dependencies
+├── docs/               # Documentation
+├── README.md           # Project overview
+└── package.json        # Workspace configuration
 ```
 
 ## 🔧 Available Scripts

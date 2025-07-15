@@ -1,6 +1,5 @@
 const Permission = require('../models/Permission');
 const Role = require('../models/Role');
-const PermissionGroup = require('../models/PermissionGroup');
 const AuditLog = require('../models/AuditLog');
 
 /**
@@ -336,91 +335,6 @@ const seedDefaultRoles = async (createdBy) => {
 };
 
 /**
- * Seed permission groups
- */
-const seedPermissionGroups = async (createdBy) => {
-  const groups = [
-    {
-      name: 'Student Management',
-      description: 'All permissions related to student management',
-      category: 'academic',
-      permissions: ['students:create', 'students:read', 'students:update', 'students:delete', 'students:manage']
-    },
-    {
-      name: 'Course Management',
-      description: 'All permissions related to course management',
-      category: 'academic',
-      permissions: ['courses:create', 'courses:read', 'courses:update', 'courses:delete', 'courses:manage']
-    },
-    {
-      name: 'Grade Management',
-      description: 'All permissions related to grade management',
-      category: 'academic',
-      permissions: ['grades:create', 'grades:read', 'grades:update', 'grades:delete', 'grades:approve']
-    },
-    {
-      name: 'Financial Management',
-      description: 'All permissions related to financial operations',
-      category: 'financial',
-      permissions: ['payments:create', 'payments:read', 'payments:update', 'payments:delete', 'payments:approve']
-    },
-    {
-      name: 'System Administration',
-      description: 'All system administration permissions',
-      category: 'system',
-      permissions: ['system:admin', 'system:config', 'system:backup', 'system:restore', 'audit:read', 'audit:export']
-    }
-  ];
-
-  const results = {
-    created: 0,
-    updated: 0,
-    errors: []
-  };
-
-  for (const groupData of groups) {
-    try {
-      // Resolve permission names to IDs
-      const permissionIds = [];
-      for (const permissionName of groupData.permissions) {
-        const permission = await Permission.findOne({ name: permissionName, isActive: true });
-        if (permission) {
-          permissionIds.push(permission._id);
-        }
-      }
-
-      const existingGroup = await PermissionGroup.findOne({ name: groupData.name });
-      
-      if (existingGroup) {
-        existingGroup.description = groupData.description;
-        existingGroup.category = groupData.category;
-        existingGroup.permissions = permissionIds;
-        existingGroup.createdBy = createdBy;
-        await existingGroup.save();
-        results.updated++;
-      } else {
-        const group = new PermissionGroup({
-          name: groupData.name,
-          description: groupData.description,
-          category: groupData.category,
-          permissions: permissionIds,
-          createdBy
-        });
-        await group.save();
-        results.created++;
-      }
-    } catch (error) {
-      results.errors.push({
-        group: groupData.name,
-        error: error.message
-      });
-    }
-  }
-
-  return results;
-};
-
-/**
  * Initialize RBAC system with default data
  */
 const initializeRBAC = async (createdBy) => {
@@ -433,15 +347,11 @@ const initializeRBAC = async (createdBy) => {
     const roleResults = await seedDefaultRoles(createdBy);
     console.log('Roles seeded:', roleResults);
     
-    const groupResults = await seedPermissionGroups(createdBy);
-    console.log('Permission groups seeded:', groupResults);
-    
     console.log('RBAC system initialized successfully');
     
     return {
       permissions: permissionResults,
-      roles: roleResults,
-      groups: groupResults
+      roles: roleResults
     };
   } catch (error) {
     console.error('RBAC initialization error:', error);
@@ -452,7 +362,6 @@ const initializeRBAC = async (createdBy) => {
 module.exports = {
   seedDefaultPermissions,
   seedDefaultRoles,
-  seedPermissionGroups,
   initializeRBAC,
   defaultPermissions,
   defaultRoles
