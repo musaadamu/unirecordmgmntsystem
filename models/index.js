@@ -7,6 +7,12 @@ const Grade = require('./Grade');
 const Enrollment = require('./Enrollment');
 const Transcript = require('./Transcript');
 const Payment = require('./Payment');
+const Attendance = require('./Attendance');
+const Document = require('./Document');
+const ExtracurricularActivity = require('./ExtracurricularActivity');
+const DisciplinaryRecord = require('./DisciplinaryRecord');
+const HealthRecord = require('./HealthRecord');
+const LibraryRecord = require('./LibraryRecord');
 
 module.exports = {
   User,
@@ -16,5 +22,11 @@ module.exports = {
   Grade,
   Enrollment,
   Transcript,
-  Payment
+  Payment,
+  Attendance,
+  Document,
+  ExtracurricularActivity,
+  DisciplinaryRecord,
+  HealthRecord,
+  LibraryRecord
 };

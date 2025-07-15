@@ -52,10 +52,10 @@ app.use('/api/students', require('./routes/students'));
 app.use('/api/courses', require('./routes/courses'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/password-reset', require('./routes/passwordReset'));
-// app.use('/api/grades', require('./routes/grades'));
-// app.use('/api/enrollments', require('./routes/enrollments'));
+app.use('/api/grades', require('./routes/grades'));
+app.use('/api/enrollments', require('./routes/enrollments'));
+app.use('/api/transcripts', require('./routes/transcripts'));
 // app.use('/api/payments', require('./routes/payments'));
-// app.use('/api/transcripts', require('./routes/transcripts'));
 
 // Import error handling middleware
 const { globalErrorHandler, handleNotFound } = require('./middleware/errorHandler');
