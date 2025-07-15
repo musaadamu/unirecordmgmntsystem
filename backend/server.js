@@ -11,7 +11,11 @@ const app = express();
 // Security middleware
 app.use(helmet());
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: [
+    'http://localhost:3000', // Student Portal
+    'http://localhost:3001', // Admin Portal
+    process.env.FRONTEND_URL
+  ].filter(Boolean),
   credentials: true
 }));
 
