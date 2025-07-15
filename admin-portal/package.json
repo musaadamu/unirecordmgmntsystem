@@ -42,7 +42,8 @@
     "zustand": "^4.4.7",
     "clsx": "^2.0.0",
     "lodash": "^4.17.21",
-    "@types/lodash": "^4.14.202"
+    "@types/lodash": "^4.14.202",
+    "react-dropzone": "^14.2.3"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^5.17.0",
