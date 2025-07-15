@@ -57,6 +57,9 @@ app.use('/api/enrollments', require('./routes/enrollments'));
 app.use('/api/transcripts', require('./routes/transcripts'));
 // app.use('/api/payments', require('./routes/payments'));
 
+// RBAC Routes
+app.use('/api/admin', require('./routes/rbac'));
+
 // Import error handling middleware
 const { globalErrorHandler, handleNotFound } = require('./middleware/errorHandler');
 
