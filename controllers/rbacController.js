@@ -5,6 +5,7 @@ const PermissionGroup = require('../models/PermissionGroup');
 const AuditLog = require('../models/AuditLog');
 const User = require('../models/User');
 const { clearUserCache } = require('../middleware/rbac');
+const notificationService = require('../services/notificationService');
 
 /**
  * Permission Management Controllers
@@ -563,6 +564,335 @@ const getRoleAnalytics = async (req, res) => {
   }
 };
 
+/**
+ * User Role Assignment Controllers
+ */
+
+// Get user roles
+const getUserRoles = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const userRoles = await UserRole.findUserRoles(userId, false);
+    const roles = userRoles.map(ur => ur.roleId);
+
+    // Get effective permissions
+    const permissionIds = new Set();
+    roles.forEach(role => {
+      role.permissions.forEach(permissionId => {
+        permissionIds.add(permissionId.toString());
+      });
+    });
+
+    const effectivePermissions = await Permission.find({
+      _id: { $in: Array.from(permissionIds) },
+      isActive: true
+    });
+
+    res.json({
+      success: true,
+      data: {
+        userRoles,
+        roles,
+        effectivePermissions
+      }
+    });
+  } catch (error) {
+    console.error('Get user roles error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching user roles',
+      error: error.message
+    });
+  }
+};
+
+// Assign role to user
+const assignRole = async (req, res) => {
+  try {
+    const assignmentData = {
+      ...req.body,
+      assignedBy: req.user._id,
+      _ipAddress: req.ip,
+      _userAgent: req.get('User-Agent')
+    };
+
+    const userRole = new UserRole(assignmentData);
+    await userRole.save();
+
+    await userRole.populate(['userId', 'roleId', 'assignedBy']);
+
+    // Clear user cache
+    await clearUserCache(assignmentData.userId);
+
+    // Send notification
+    await notificationService.sendNotification('role_assigned', {
+      userId: assignmentData.userId,
+      roleId: assignmentData.roleId,
+      assignedBy: req.user._id,
+      expiresAt: assignmentData.expiresAt,
+      department: assignmentData.department,
+      triggeredBy: req.user._id
+    }, {
+      ipAddress: req.ip,
+      userAgent: req.get('User-Agent'),
+      priority: 'high'
+    });
+
+    res.status(201).json({
+      success: true,
+      data: { userRole },
+      message: 'Role assigned successfully'
+    });
+  } catch (error) {
+    console.error('Assign role error:', error);
+
+    if (error.statusCode === 409) {
+      return res.status(409).json({
+        success: false,
+        message: error.message
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      message: 'Error assigning role',
+      error: error.message
+    });
+  }
+};
+
+// Update user role assignment
+const updateUserRole = async (req, res) => {
+  try {
+    const userRole = await UserRole.findById(req.params.id);
+
+    if (!userRole) {
+      return res.status(404).json({
+        success: false,
+        message: 'User role assignment not found'
+      });
+    }
+
+    const oldData = {
+      expiresAt: userRole.expiresAt,
+      department: userRole.department,
+      isActive: userRole.isActive
+    };
+
+    Object.assign(userRole, req.body);
+    userRole._ipAddress = req.ip;
+    userRole._userAgent = req.get('User-Agent');
+
+    await userRole.save();
+    await userRole.populate(['userId', 'roleId', 'assignedBy']);
+
+    // Clear user cache
+    await clearUserCache(userRole.userId.toString());
+
+    // Send notification if significant changes
+    const hasSignificantChanges =
+      oldData.expiresAt !== userRole.expiresAt ||
+      oldData.department !== userRole.department ||
+      oldData.isActive !== userRole.isActive;
+
+    if (hasSignificantChanges) {
+      await notificationService.sendNotification('role_updated', {
+        userId: userRole.userId._id,
+        roleId: userRole.roleId._id,
+        updatedBy: req.user._id,
+        changes: {
+          old: oldData,
+          new: {
+            expiresAt: userRole.expiresAt,
+            department: userRole.department,
+            isActive: userRole.isActive
+          }
+        },
+        triggeredBy: req.user._id
+      }, {
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent'),
+        priority: 'medium'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: { userRole },
+      message: 'User role assignment updated successfully'
+    });
+  } catch (error) {
+    console.error('Update user role error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error updating user role assignment',
+      error: error.message
+    });
+  }
+};
+
+// Remove user role assignment
+const removeUserRole = async (req, res) => {
+  try {
+    const userRole = await UserRole.findById(req.params.id);
+
+    if (!userRole) {
+      return res.status(404).json({
+        success: false,
+        message: 'User role assignment not found'
+      });
+    }
+
+    const userId = userRole.userId.toString();
+    const roleId = userRole.roleId.toString();
+
+    userRole._ipAddress = req.ip;
+    userRole._userAgent = req.get('User-Agent');
+
+    await userRole.remove();
+
+    // Clear user cache
+    await clearUserCache(userId);
+
+    // Send notification
+    await notificationService.sendNotification('role_removed', {
+      userId: userId,
+      roleId: roleId,
+      removedBy: req.user._id,
+      reason: req.body.reason || 'Administrative action',
+      triggeredBy: req.user._id
+    }, {
+      ipAddress: req.ip,
+      userAgent: req.get('User-Agent'),
+      priority: 'high'
+    });
+
+    res.json({
+      success: true,
+      message: 'User role assignment removed successfully'
+    });
+  } catch (error) {
+    console.error('Remove user role error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error removing user role assignment',
+      error: error.message
+    });
+  }
+};
+
+// Get users with specific role
+const getRoleUsers = async (req, res) => {
+  try {
+    const { roleId } = req.params;
+    const {
+      page = 1,
+      limit = 10,
+      department,
+      isActive,
+      sortBy = 'assignedAt',
+      sortOrder = 'desc'
+    } = req.query;
+
+    // Build filter
+    const filter = { roleId };
+    if (department) filter.department = department;
+    if (isActive !== undefined) filter.isActive = isActive === 'true';
+
+    // Build sort
+    const sort = {};
+    sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const [userRoles, total] = await Promise.all([
+      UserRole.find(filter)
+        .sort(sort)
+        .skip(skip)
+        .limit(parseInt(limit))
+        .populate('userId', 'personalInfo email academicInfo.department')
+        .populate('assignedBy', 'personalInfo.firstName personalInfo.lastName'),
+      UserRole.countDocuments(filter)
+    ]);
+
+    const users = userRoles.map(ur => ur.userId);
+
+    res.json({
+      success: true,
+      data: {
+        userRoles,
+        users,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total,
+          totalPages: Math.ceil(total / parseInt(limit))
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Get role users error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching role users',
+      error: error.message
+    });
+  }
+};
+
+// Bulk assign roles
+const bulkAssignRoles = async (req, res) => {
+  try {
+    const { assignments } = req.body;
+
+    if (!assignments || !Array.isArray(assignments)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Assignments array is required'
+      });
+    }
+
+    const userRoles = await UserRole.bulkAssign(assignments, req.user._id);
+
+    // Clear cache for all affected users
+    const userIds = [...new Set(assignments.map(a => a.userId))];
+    for (const userId of userIds) {
+      await clearUserCache(userId);
+    }
+
+    // Send bulk notification
+    await notificationService.sendBulkNotification('role_assigned',
+      userIds.map(userId => ({ userId })),
+      {
+        assignedBy: req.user.personalInfo.firstName + ' ' + req.user.personalInfo.lastName,
+        assignedAt: new Date().toISOString(),
+        system: {
+          name: 'University Record Management System',
+          url: process.env.FRONTEND_URL || 'http://localhost:3000',
+          supportEmail: process.env.SUPPORT_EMAIL || 'support@university.edu'
+        }
+      },
+      {
+        triggeredBy: req.user._id,
+        priority: 'medium'
+      }
+    );
+
+    res.status(201).json({
+      success: true,
+      data: { userRoles },
+      message: `${userRoles.length} role assignments completed successfully`
+    });
+  } catch (error) {
+    console.error('Bulk assign roles error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error in bulk role assignment',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   // Permission controllers
   getPermissions,
@@ -571,7 +901,7 @@ module.exports = {
   updatePermission,
   deletePermission,
   getPermissionCategories,
-  
+
   // Role controllers
   getRoles,
   getRole,
@@ -580,5 +910,13 @@ module.exports = {
   deleteRole,
   cloneRole,
   getRolePermissions,
-  getRoleAnalytics
+  getRoleAnalytics,
+
+  // User role assignment controllers
+  getUserRoles,
+  assignRole,
+  updateUserRole,
+  removeUserRole,
+  getRoleUsers,
+  bulkAssignRoles
 };

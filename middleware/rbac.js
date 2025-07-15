@@ -74,6 +74,19 @@ const authenticate = async (req, res, next) => {
       category: 'authentication',
       metadata: { success: false, errorCode: 'AUTH_FAILED' }
     });
+
+    // Send security alert for repeated failed attempts
+    const notificationService = require('../services/notificationService');
+    await notificationService.sendNotification('security_alert', {
+      alertType: 'authentication_failure',
+      severity: 'medium',
+      details: `Authentication failed: ${error.message}`,
+      ipAddress: req.ip,
+      timestamp: new Date().toISOString()
+    }, {
+      ipAddress: req.ip,
+      userAgent: req.get('User-Agent')
+    }).catch(err => console.error('Notification error:', err));
     
     res.status(401).json({
       success: false,
@@ -192,6 +205,21 @@ const requirePermission = (permission, options = {}) => {
           category: 'security',
           metadata: { success: false, errorCode: 'PERMISSION_DENIED' }
         });
+
+        // Send security alert for access denied
+        const notificationService = require('../services/notificationService');
+        await notificationService.sendNotification('access_denied', {
+          userId: req.user._id,
+          alertType: 'access_denied',
+          severity: 'medium',
+          details: `Access denied to ${req.path} (${req.method}) - Required permission: ${permission}`,
+          ipAddress: req.ip,
+          timestamp: new Date().toISOString(),
+          triggeredBy: req.user._id
+        }, {
+          ipAddress: req.ip,
+          userAgent: req.get('User-Agent')
+        }).catch(err => console.error('Notification error:', err));
         
         return res.status(403).json({
           success: false,

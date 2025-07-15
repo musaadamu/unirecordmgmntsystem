@@ -112,6 +112,46 @@ router.delete('/roles/:id',
 );
 
 /**
+ * User Role Assignment Routes
+ */
+
+// GET /api/admin/user-roles/user/:userId - Get user's roles
+router.get('/user-roles/user/:userId',
+  requireAnyPermission(['roles:read', 'users:read']),
+  rbacController.getUserRoles
+);
+
+// GET /api/admin/user-roles/role/:roleId/users - Get users with specific role
+router.get('/user-roles/role/:roleId/users',
+  requirePermission('roles:read'),
+  rbacController.getRoleUsers
+);
+
+// POST /api/admin/user-roles/assign - Assign role to user
+router.post('/user-roles/assign',
+  requirePermission('roles:assign'),
+  rbacController.assignRole
+);
+
+// POST /api/admin/user-roles/bulk-assign - Bulk assign roles
+router.post('/user-roles/bulk-assign',
+  requirePermission('roles:assign'),
+  rbacController.bulkAssignRoles
+);
+
+// PUT /api/admin/user-roles/:id - Update user role assignment
+router.put('/user-roles/:id',
+  requirePermission('roles:assign'),
+  rbacController.updateUserRole
+);
+
+// DELETE /api/admin/user-roles/:id - Remove user role assignment
+router.delete('/user-roles/:id',
+  requirePermission('roles:assign'),
+  rbacController.removeUserRole
+);
+
+/**
  * System Administration Routes (Super Admin only)
  */
 

@@ -12,7 +12,9 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "seed": "node utils/seedDatabase.js",
-    "init-rbac": "node scripts/initializeRBAC.js"
+    "init-rbac": "node scripts/initializeRBAC.js",
+    "init-notifications": "node scripts/initializeNotifications.js",
+    "init-all": "npm run init-rbac && npm run init-notifications"
   },
   "keywords": [
     "university",
@@ -47,7 +49,12 @@
     "morgan": "^1.10.0",
     "multer": "^2.0.1",
     "nodemailer": "^7.0.5",
-    "redis": "^4.6.0"
+    "redis": "^4.6.0",
+    "@sendgrid/mail": "^8.1.0",
+    "aws-sdk": "^2.1691.0",
+    "mailgun-js": "^0.22.0",
+    "bull": "^4.12.2",
+    "handlebars": "^4.7.8"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"

@@ -60,6 +60,9 @@ app.use('/api/transcripts', require('./routes/transcripts'));
 // RBAC Routes
 app.use('/api/admin', require('./routes/rbac'));
 
+// Notification Routes
+app.use('/api/notifications', require('./routes/notifications'));
+
 // Import error handling middleware
 const { globalErrorHandler, handleNotFound } = require('./middleware/errorHandler');
 
