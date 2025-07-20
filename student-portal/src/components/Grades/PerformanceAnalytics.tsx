@@ -24,7 +24,6 @@ import {
   EmojiEvents,
   Warning,
   CheckCircle,
-  Target,
   Lightbulb,
 } from '@mui/icons-material';
 import {

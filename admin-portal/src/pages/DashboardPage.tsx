@@ -42,15 +42,15 @@ import { useQuery } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 
 // Components
-import StatCard from '@/components/Dashboard/StatCard';
-import ActivityFeed from '@/components/Dashboard/ActivityFeed';
-import LineChart from '@/components/Charts/LineChart';
-import BarChart from '@/components/Charts/BarChart';
-import PieChart from '@/components/Charts/PieChart';
-import LoadingSpinner from '@/components/LoadingSpinner';
 
 // Services
-import dashboardService from '@/services/dashboardService';
+import StatCard from '../components/Dashboard/StatCard';
+import ActivityFeed from '../components/Dashboard/ActivityFeed';
+import LineChart from '../components/Charts/LineChart';
+import BarChart from '../components/Charts/BarChart';
+import PieChart from '../components/Charts/PieChart';
+import LoadingSpinner from '../components/LoadingSpinner';
+import dashboardService from '../services/dashboardService';
 
 interface TabPanelProps {
   children?: React.ReactNode;

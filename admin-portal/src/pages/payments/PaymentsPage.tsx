@@ -447,7 +447,7 @@ const PaymentsPage: React.FC = () => {
                       Secure online payment processing with Remita
                     </Typography>
                   </Box>
-                </Grid>
+                </Box>
 
                 <Alert severity="info" sx={{ mb: 3 }}>
                   Remita is Nigeria's leading payment platform providing secure, reliable, and efficient payment solutions.

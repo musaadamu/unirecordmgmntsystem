@@ -1,32 +1,37 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate
+} from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { CssBaseline, Box } from '@mui/material';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
 
 // Components
-import ProtectedRoute from '@/components/ProtectedRoute';
-import Layout from '@/components/Layout';
-import LoadingSpinner from '@/components/LoadingSpinner';
+import ProtectedRoute from './components/ProtectedRoute';
+import Layout from './components/Layout';
+import LoadingSpinner from './components/LoadingSpinner';
 
 // Pages
-import LoginPage from '@/pages/auth/LoginPage';
-import DashboardPage from '@/pages/DashboardPage';
-import UsersPage from '@/pages/users/UsersPage';
-import StudentsPage from '@/pages/students/StudentsPage';
-import CoursesPage from '@/pages/courses/CoursesPage';
-import GradesPage from '@/pages/grades/GradesPage';
-import EnrollmentsPage from '@/pages/enrollments/EnrollmentsPage';
-import PaymentsPage from '@/pages/payments/PaymentsPage';
-import AttendancePage from '@/pages/attendance/AttendancePage';
-import ReportsPage from '@/pages/reports/ReportsPage';
-import SettingsPage from '@/pages/settings/SettingsPage';
-import ProfilePage from '@/pages/profile/ProfilePage';
-import NotFoundPage from '@/pages/NotFoundPage';
+import LoginPage from './pages/auth/LoginPage';
+import DashboardPage from './pages/DashboardPage';
+import UsersPage from './pages/users/UsersPage';
+import StudentsPage from './pages/students/StudentsPage';
+import CoursesPage from './pages/courses/CoursesPage';
+import GradesPage from './pages/grades/GradesPage';
+import EnrollmentsPage from './pages/enrollments/EnrollmentsPage';
+import PaymentsPage from './pages/payments/PaymentsPage';
+import AttendancePage from './pages/attendance/AttendancePage';
+import ReportsPage from './pages/reports/ReportsPage';
+import SettingsPage from './pages/settings/SettingsPage';
+import ProfilePage from './pages/profile/ProfilePage';
+import NotFoundPage from './pages/NotFoundPage';
 
 // Store
-import { useAuthStore } from '@/store/authStore';
+import { useAuthStore } from './store/authStore';
 
 // Create theme
 const theme = createTheme({

@@ -5,8 +5,7 @@
   "private": true,
   "workspaces": [
     "backend",
-    "admin-portal",
-    "student-portal"
+    "admin-portal"
   ],
   "scripts": {
     "start": "node start-all.js",

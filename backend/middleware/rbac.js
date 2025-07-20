@@ -11,7 +11,13 @@ let redisClient = null;
 try {
   if (process.env.REDIS_URL) {
     redisClient = Redis.createClient({ url: process.env.REDIS_URL });
-    redisClient.connect();
+    redisClient.on('error', (err) => {
+      console.error('Redis Client Error', err);
+      // Optionally handle reconnection or fallback logic here
+    });
+    redisClient.connect().catch(err => {
+      console.error('Redis connection failed:', err);
+    });
   }
 } catch (error) {
   console.warn('Redis not available, using memory cache');

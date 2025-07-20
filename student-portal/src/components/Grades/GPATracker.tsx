@@ -33,7 +33,6 @@ import {
   Calculate,
   TrendingUp,
   School,
-  Target,
   Timeline,
 } from '@mui/icons-material';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -346,7 +345,6 @@ const GPATracker: React.FC<GPATrackerProps> = ({ gpaData }) => {
                               label="Already Achieved"
                               size="small"
                               color="success"
-                              icon={<Target />}
                             />
                           ) : requiredGPA !== null ? (
                             <Box>

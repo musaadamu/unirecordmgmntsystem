@@ -23,15 +23,15 @@ const handleValidationErrors = (req, res, next) => {
 /**
  * Validate MongoDB ObjectId
  */
-const validateObjectId = (fieldName = 'id') => {
-  return param(fieldName)
+const validateObjectId = (fieldName = 'id') => [
+  param(fieldName)
     .custom((value) => {
       if (!mongoose.Types.ObjectId.isValid(value)) {
         throw new Error('Invalid ID format');
       }
       return true;
-    });
-};
+    })
+];
 
 /**
  * Common validation rules
@@ -55,7 +55,7 @@ const commonValidations = {
     .matches(/^[a-zA-Z\s]+$/)
     .withMessage(`${fieldName} must contain only letters and spaces`),
     
-  phone: body('phone')
+  phone: (fieldName = 'phone') => body(fieldName)
     .isMobilePhone()
     .withMessage('Please provide a valid phone number'),
     
@@ -84,7 +84,7 @@ const commonValidations = {
     .isFloat({ min: 0, max: 4 })
     .withMessage('GPA must be between 0 and 4'),
     
-  credits: body('credits')
+  credits: (fieldName = 'credits') => body(fieldName)
     .isInt({ min: 1, max: 6 })
     .withMessage('Credits must be between 1 and 6'),
     
@@ -211,7 +211,7 @@ const validateGrade = [
   commonValidations.academicYear,
   commonValidations.grade,
   commonValidations.positiveNumber('numericGrade'),
-  commonValidations.credits
+  commonValidations.credits()
 ];
 
 /**

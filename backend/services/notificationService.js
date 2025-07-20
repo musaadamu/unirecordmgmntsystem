@@ -6,6 +6,444 @@ const User = require('../models/User');
 const AuditLog = require('../models/AuditLog');
 
 class NotificationService extends EventEmitter {
+  /**
+   * Handle role updated event
+   */
+  async handleRoleUpdated(eventData, options) {
+    // Example: Notify user about role update
+    const { userId, roleId, updatedBy, changes } = eventData;
+    try {
+      const [user, role] = await Promise.all([
+        User.findById(userId),
+        require('../models/Role').findById(roleId)
+      ]);
+      if (!user || !role) return;
+      const shouldNotify = await this.shouldSendNotification(userId, 'role_changes');
+      if (!shouldNotify) return;
+      const template = await EmailTemplate.findOne({
+        category: 'role_update',
+        isActive: true,
+        language: user.preferredLanguage || 'en'
+      });
+      if (!template) return;
+      const templateData = {
+        user: {
+          firstName: user.personalInfo.firstName,
+          lastName: user.personalInfo.lastName,
+          email: user.email
+        },
+        role: {
+          name: role.name,
+          description: role.description
+        },
+        changes: changes || {},
+        updatedBy: updatedBy ? await this.getUserName(updatedBy) : 'System',
+        updatedAt: new Date().toISOString(),
+        system: {
+          name: 'University Record Management System',
+          url: process.env.FRONTEND_URL || 'http://localhost:3000',
+          supportEmail: process.env.SUPPORT_EMAIL || 'support@university.edu'
+        }
+      };
+      await EmailQueue.createFromTemplate(
+        template._id,
+        [{ email: user.email, name: `${user.personalInfo.firstName} ${user.personalInfo.lastName}`, userId: user._id }],
+        templateData,
+        {
+          priority: 'high',
+          triggeredBy: updatedBy,
+          eventId: `role_updated_${userId}_${roleId}_${Date.now()}`,
+          source: 'automatic'
+        }
+      );
+      console.log(`✅ Role update notification queued for ${user.email}`);
+    } catch (error) {
+      console.error('Role updated notification error:', error);
+    }
+  }
+
+  /**
+   * Handle permission granted event
+   */
+  async handlePermissionGranted(eventData, options) {
+    // Example: Notify user about permission grant
+    const { userId, permission, grantedBy } = eventData;
+    try {
+      const user = await User.findById(userId);
+      if (!user) return;
+      const shouldNotify = await this.shouldSendNotification(userId, 'permission_updates');
+      if (!shouldNotify) return;
+      const template = await EmailTemplate.findOne({
+        category: 'permission_granted',
+        isActive: true,
+        language: user.preferredLanguage || 'en'
+      });
+      if (!template) return;
+      const templateData = {
+        user: {
+          firstName: user.personalInfo.firstName,
+          lastName: user.personalInfo.lastName,
+          email: user.email
+        },
+        permission,
+        grantedBy: grantedBy ? await this.getUserName(grantedBy) : 'System',
+        grantedAt: new Date().toISOString(),
+        system: {
+          name: 'University Record Management System',
+          url: process.env.FRONTEND_URL || 'http://localhost:3000',
+          supportEmail: process.env.SUPPORT_EMAIL || 'support@university.edu'
+        }
+      };
+      await EmailQueue.createFromTemplate(
+        template._id,
+        [{ email: user.email, name: `${user.personalInfo.firstName} ${user.personalInfo.lastName}`, userId: user._id }],
+        templateData,
+        {
+          priority: 'high',
+          triggeredBy: grantedBy,
+          eventId: `permission_granted_${userId}_${Date.now()}`,
+          source: 'automatic'
+        }
+      );
+      console.log(`✅ Permission granted notification queued for ${user.email}`);
+    } catch (error) {
+      console.error('Permission granted notification error:', error);
+    }
+  }
+
+  /**
+   * Handle permission revoked event
+   */
+  async handlePermissionRevoked(eventData, options) {
+    // Example: Notify user about permission revocation
+    const { userId, permission, revokedBy } = eventData;
+    try {
+      const user = await User.findById(userId);
+      if (!user) return;
+      const shouldNotify = await this.shouldSendNotification(userId, 'permission_updates');
+      if (!shouldNotify) return;
+      const template = await EmailTemplate.findOne({
+        category: 'permission_revoked',
+        isActive: true,
+        language: user.preferredLanguage || 'en'
+      });
+      if (!template) return;
+      const templateData = {
+        user: {
+          firstName: user.personalInfo.firstName,
+          lastName: user.personalInfo.lastName,
+          email: user.email
+        },
+        permission,
+        revokedBy: revokedBy ? await this.getUserName(revokedBy) : 'System',
+        revokedAt: new Date().toISOString(),
+        system: {
+          name: 'University Record Management System',
+          url: process.env.FRONTEND_URL || 'http://localhost:3000',
+          supportEmail: process.env.SUPPORT_EMAIL || 'support@university.edu'
+        }
+      };
+      await EmailQueue.createFromTemplate(
+        template._id,
+        [{ email: user.email, name: `${user.personalInfo.firstName} ${user.personalInfo.lastName}`, userId: user._id }],
+        templateData,
+        {
+          priority: 'high',
+          triggeredBy: revokedBy,
+          eventId: `permission_revoked_${userId}_${Date.now()}`,
+          source: 'automatic'
+        }
+      );
+      console.log(`✅ Permission revoked notification queued for ${user.email}`);
+    } catch (error) {
+      console.error('Permission revoked notification error:', error);
+    }
+  }
+
+  /**
+   * Handle permission updated event
+   */
+  async handlePermissionUpdated(eventData, options) {
+    // Example: Notify user about permission update
+    const { userId, permission, updatedBy, changes } = eventData;
+    try {
+      const user = await User.findById(userId);
+      if (!user) return;
+      const shouldNotify = await this.shouldSendNotification(userId, 'permission_updates');
+      if (!shouldNotify) return;
+      const template = await EmailTemplate.findOne({
+        category: 'permission_updated',
+        isActive: true,
+        language: user.preferredLanguage || 'en'
+      });
+      if (!template) return;
+      const templateData = {
+        user: {
+          firstName: user.personalInfo.firstName,
+          lastName: user.personalInfo.lastName,
+          email: user.email
+        },
+        permission,
+        changes: changes || {},
+        updatedBy: updatedBy ? await this.getUserName(updatedBy) : 'System',
+        updatedAt: new Date().toISOString(),
+        system: {
+          name: 'University Record Management System',
+          url: process.env.FRONTEND_URL || 'http://localhost:3000',
+          supportEmail: process.env.SUPPORT_EMAIL || 'support@university.edu'
+        }
+      };
+      await EmailQueue.createFromTemplate(
+        template._id,
+        [{ email: user.email, name: `${user.personalInfo.firstName} ${user.personalInfo.lastName}`, userId: user._id }],
+        templateData,
+        {
+          priority: 'high',
+          triggeredBy: updatedBy,
+          eventId: `permission_updated_${userId}_${Date.now()}`,
+          source: 'automatic'
+        }
+      );
+      console.log(`✅ Permission updated notification queued for ${user.email}`);
+    } catch (error) {
+      console.error('Permission updated notification error:', error);
+    }
+  }
+
+  /**
+   * Handle access denied event
+   */
+  async handleAccessDenied(eventData, options) {
+    // Example: Notify user about access denied
+    const { userId, resource, attemptedAction, ipAddress } = eventData;
+    try {
+      const user = await User.findById(userId);
+      if (!user) return;
+      const shouldNotify = await this.shouldSendNotification(userId, 'security_alerts');
+      if (!shouldNotify) return;
+      const template = await EmailTemplate.findOne({
+        category: 'access_denied',
+        isActive: true,
+        language: user.preferredLanguage || 'en'
+      });
+      if (!template) return;
+      const templateData = {
+        user: {
+          firstName: user.personalInfo.firstName,
+          lastName: user.personalInfo.lastName,
+          email: user.email
+        },
+        resource,
+        attemptedAction,
+        timestamp: new Date().toISOString(),
+        ipAddress,
+        system: {
+          name: 'University Record Management System',
+          url: process.env.FRONTEND_URL || 'http://localhost:3000',
+          supportEmail: process.env.SUPPORT_EMAIL || 'support@university.edu'
+        }
+      };
+      await EmailQueue.createFromTemplate(
+        template._id,
+        [{ email: user.email, name: `${user.personalInfo.firstName} ${user.personalInfo.lastName}`, userId: user._id }],
+        templateData,
+        {
+          priority: 'medium',
+          triggeredBy: userId,
+          eventId: `access_denied_${userId}_${Date.now()}`,
+          source: 'automatic'
+        }
+      );
+      console.log(`🚫 Access denied notification queued for ${user.email}`);
+    } catch (error) {
+      console.error('Access denied notification error:', error);
+    }
+  }
+
+  /**
+   * Handle suspicious activity event
+   */
+  async handleSuspiciousActivity(eventData, options) {
+    // Example: Notify user about suspicious activity
+    const { userId, activityType, details, ipAddress } = eventData;
+    try {
+      const user = await User.findById(userId);
+      if (!user) return;
+      const shouldNotify = await this.shouldSendNotification(userId, 'security_alerts');
+      if (!shouldNotify) return;
+      const template = await EmailTemplate.findOne({
+        category: 'suspicious_activity',
+        isActive: true,
+        language: user.preferredLanguage || 'en'
+      });
+      if (!template) return;
+      const templateData = {
+        user: {
+          firstName: user.personalInfo.firstName,
+          lastName: user.personalInfo.lastName,
+          email: user.email
+        },
+        activityType,
+        details,
+        timestamp: new Date().toISOString(),
+        ipAddress,
+        system: {
+          name: 'University Record Management System',
+          url: process.env.FRONTEND_URL || 'http://localhost:3000',
+          supportEmail: process.env.SUPPORT_EMAIL || 'support@university.edu'
+        }
+      };
+      await EmailQueue.createFromTemplate(
+        template._id,
+        [{ email: user.email, name: `${user.personalInfo.firstName} ${user.personalInfo.lastName}`, userId: user._id }],
+        templateData,
+        {
+          priority: 'high',
+          triggeredBy: userId,
+          eventId: `suspicious_activity_${userId}_${Date.now()}`,
+          source: 'automatic'
+        }
+      );
+      console.log(`⚠️ Suspicious activity notification queued for ${user.email}`);
+    } catch (error) {
+      console.error('Suspicious activity notification error:', error);
+    }
+  }
+
+  /**
+   * Handle system maintenance event
+   */
+  async handleSystemMaintenance(eventData, options) {
+    // Example: Notify all users about system maintenance
+    const { scheduledAt, duration, message } = eventData;
+    try {
+      // In a real implementation, you would fetch all users or a subset
+      // For demo, just log the event
+      console.log(`🔧 System maintenance scheduled at ${scheduledAt} for ${duration} minutes. Message: ${message}`);
+      // You could queue emails or notifications here
+    } catch (error) {
+      console.error('System maintenance notification error:', error);
+    }
+  }
+
+  /**
+   * Handle account updated event
+   */
+  async handleAccountUpdated(eventData, options) {
+    // Example: Notify user about account update
+    const { userId, updatedBy, changes } = eventData;
+    try {
+      const user = await User.findById(userId);
+      if (!user) return;
+      const shouldNotify = await this.shouldSendNotification(userId, 'account_updates');
+      if (!shouldNotify) return;
+      const template = await EmailTemplate.findOne({
+        category: 'account_updated',
+        isActive: true,
+        language: user.preferredLanguage || 'en'
+      });
+      if (!template) return;
+      const templateData = {
+        user: {
+          firstName: user.personalInfo.firstName,
+          lastName: user.personalInfo.lastName,
+          email: user.email
+        },
+        changes: changes || {},
+        updatedBy: updatedBy ? await this.getUserName(updatedBy) : 'System',
+        updatedAt: new Date().toISOString(),
+        system: {
+          name: 'University Record Management System',
+          url: process.env.FRONTEND_URL || 'http://localhost:3000',
+          supportEmail: process.env.SUPPORT_EMAIL || 'support@university.edu'
+        }
+      };
+      await EmailQueue.createFromTemplate(
+        template._id,
+        [{ email: user.email, name: `${user.personalInfo.firstName} ${user.personalInfo.lastName}`, userId: user._id }],
+        templateData,
+        {
+          priority: 'medium',
+          triggeredBy: updatedBy,
+          eventId: `account_updated_${userId}_${Date.now()}`,
+          source: 'automatic'
+        }
+      );
+      console.log(`✅ Account updated notification queued for ${user.email}`);
+    } catch (error) {
+      console.error('Account updated notification error:', error);
+    }
+  }
+
+  /**
+   * Handle approval completed event
+   */
+  async handleApprovalCompleted(eventData, options) {
+    // Example: Notify requester and approver about approval completion
+    const { requestId, approvedBy, requesterId, status, details } = eventData;
+    try {
+      const [requester, approver] = await Promise.all([
+        User.findById(requesterId),
+        User.findById(approvedBy)
+      ]);
+      if (!requester || !approver) return;
+      const template = await EmailTemplate.findOne({
+        category: 'approval_completed',
+        isActive: true
+      });
+      if (!template) return;
+      const templateData = {
+        requester: {
+          firstName: requester.personalInfo.firstName,
+          lastName: requester.personalInfo.lastName,
+          email: requester.email
+        },
+        approver: {
+          firstName: approver.personalInfo.firstName,
+          lastName: approver.personalInfo.lastName,
+          email: approver.email
+        },
+        request: {
+          id: requestId,
+          status,
+          details,
+          completedAt: new Date().toISOString()
+        },
+        system: {
+          name: 'University Record Management System',
+          url: process.env.FRONTEND_URL || 'http://localhost:3000',
+          supportEmail: process.env.SUPPORT_EMAIL || 'support@university.edu'
+        }
+      };
+      // Notify requester
+      await EmailQueue.createFromTemplate(
+        template._id,
+        [{ email: requester.email, name: `${requester.personalInfo.firstName} ${requester.personalInfo.lastName}`, userId: requester._id }],
+        templateData,
+        {
+          priority: 'high',
+          triggeredBy: approvedBy,
+          eventId: `approval_completed_${requestId}_${Date.now()}`,
+          source: 'automatic'
+        }
+      );
+      // Notify approver
+      await EmailQueue.createFromTemplate(
+        template._id,
+        [{ email: approver.email, name: `${approver.personalInfo.firstName} ${approver.personalInfo.lastName}`, userId: approver._id }],
+        templateData,
+        {
+          priority: 'high',
+          triggeredBy: approvedBy,
+          eventId: `approval_completed_${requestId}_${Date.now()}`,
+          source: 'automatic'
+        }
+      );
+      console.log(`✅ Approval completed notifications queued for requester and approver`);
+    } catch (error) {
+      console.error('Approval completed notification error:', error);
+    }
+  }
   constructor() {
     super();
     this.setupEventListeners();
