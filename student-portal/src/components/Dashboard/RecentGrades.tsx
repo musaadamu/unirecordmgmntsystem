@@ -255,6 +255,9 @@ const RecentGrades: React.FC<RecentGradesProps> = ({
                         </Box>
                       </Box>
                     }
+                    // Fix the DOM nesting issue by specifying component props
+                    primaryTypographyProps={{ component: 'div' }}
+                    secondaryTypographyProps={{ component: 'div' }}
                   />
                   
                   <Box textAlign="right" ml={2}>

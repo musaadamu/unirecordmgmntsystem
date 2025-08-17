@@ -14,6 +14,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { isAuthenticated, isLoading, user, token, updateUser, logout, setLoading } = useAuthStore();
   const location = useLocation();
 
+
   // Fetch user profile if we have a token but no user data
   const { data: profileData, error: profileError, isLoading: profileLoading } = useQuery({
     queryKey: ['profile'],
@@ -21,14 +22,15 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     enabled: !!token && !user,
     retry: false,
     staleTime: 5 * 60 * 1000, // 5 minutes
+    onSuccess: (data) => {
+      if (!user || JSON.stringify(user) !== JSON.stringify(data)) {
+        updateUser(data);
+      }
+      setLoading(false);
+    },
   });
 
-  useEffect(() => {
-    if (profileData) {
-      updateUser(profileData);
-      setLoading(false);
-    }
-  }, [profileData, updateUser, setLoading]);
+  // Removed useEffect that updated user and loading state on profileData change
 
   useEffect(() => {
     if (profileError) {
@@ -53,8 +55,18 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   }
 
   // Redirect to login if not authenticated
+  React.useEffect(() => {
+    if (isAuthenticated && !token) {
+      logout();
+    }
+  }, [isAuthenticated, token, logout]);
+
   if (!isAuthenticated || !token) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    console.log('Redirecting to login: isAuthenticated=', isAuthenticated, 'token=', token, 'location=', location.pathname);
+    // Prevent redirect loop if already on login page
+    if (location.pathname !== '/login') {
+      return <Navigate to="/login" state={{ from: location }} replace />;
+    }
   }
 
   // Check if user account is active

@@ -76,24 +76,24 @@ const ProfilePage: React.FC = () => {
     resolver: yupResolver(profileSchema),
     defaultValues: {
       personalInfo: {
-        firstName: user?.personalInfo.firstName || '',
-        lastName: user?.personalInfo.lastName || '',
-        middleName: user?.personalInfo.middleName || '',
+        firstName: user?.personalInfo?.firstName || '',
+        lastName: user?.personalInfo?.lastName || '',
+        middleName: user?.personalInfo?.middleName || '',
       },
       contactInfo: {
-        phone: user?.contactInfo.phone || '',
-        alternatePhone: user?.contactInfo.alternatePhone || '',
+        phone: user?.contactInfo?.phone || '',
+        alternatePhone: user?.contactInfo?.alternatePhone || '',
         address: {
-          street: user?.contactInfo.address.street || '',
-          city: user?.contactInfo.address.city || '',
-          state: user?.contactInfo.address.state || '',
-          country: user?.contactInfo.address.country || '',
-          postalCode: user?.contactInfo.address.postalCode || '',
+          street: user?.contactInfo?.address?.street || '',
+          city: user?.contactInfo?.address?.city || '',
+          state: user?.contactInfo?.address?.state || '',
+          country: user?.contactInfo?.address?.country || '',
+          postalCode: user?.contactInfo?.address?.postalCode || '',
         },
         emergencyContact: {
-          name: user?.contactInfo.emergencyContact.name || '',
-          relationship: user?.contactInfo.emergencyContact.relationship || '',
-          phone: user?.contactInfo.emergencyContact.phone || '',
+          name: user?.contactInfo?.emergencyContact?.name || '',
+          relationship: user?.contactInfo?.emergencyContact?.relationship || '',
+          phone: user?.contactInfo?.emergencyContact?.phone || '',
         },
       },
     },
@@ -160,6 +160,23 @@ const ProfilePage: React.FC = () => {
     );
   }
 
+  if (!user.personalInfo || !user.contactInfo || !user.academicInfo) {
+    return (
+      <Box>
+        <Typography variant="h4" fontWeight="bold" gutterBottom>
+          My Profile
+        </Typography>
+        <Card>
+          <CardContent>
+            <Typography variant="body1">
+              Loading profile details...
+            </Typography>
+          </CardContent>
+        </Card>
+      </Box>
+    );
+  }
+
   return (
     <Box>
       {/* Page Header */}
@@ -185,9 +202,9 @@ const ProfilePage: React.FC = () => {
                     mx: 'auto',
                     fontSize: '2rem',
                   }}
-                  src={user.personalInfo.profilePicture}
+                  src={user.personalInfo?.profilePicture}
                 >
-                  {user.personalInfo.firstName[0]}{user.personalInfo.lastName[0]}
+                  {user.personalInfo?.firstName?.[0]}{user.personalInfo?.lastName?.[0]}
                 </Avatar>
                 <IconButton
                   sx={{
@@ -205,11 +222,11 @@ const ProfilePage: React.FC = () => {
               </Box>
 
               <Typography variant="h5" fontWeight="bold" gutterBottom>
-                {user.personalInfo.firstName} {user.personalInfo.lastName}
+                {user.personalInfo?.firstName} {user.personalInfo?.lastName}
               </Typography>
 
               <Typography variant="body2" color="text.secondary" gutterBottom>
-                {user.academicInfo.studentId}
+                {user.academicInfo?.studentId}
               </Typography>
 
               <Chip
@@ -244,38 +261,38 @@ const ProfilePage: React.FC = () => {
                   <List>
                     <ListItem>
                       <Person sx={{ mr: 2, color: 'text.secondary' }} />
-                      <ListItemText
-                        primary="Full Name"
-                        secondary={`${user.personalInfo.firstName} ${user.personalInfo.middleName || ''} ${user.personalInfo.lastName}`.trim()}
-                      />
+                    <ListItemText
+                      primary="Full Name"
+                      secondary={`${user.personalInfo?.firstName || ''} ${user.personalInfo?.middleName || ''} ${user.personalInfo?.lastName || ''}`.trim()}
+                    />
                     </ListItem>
                     <ListItem>
                       <Email sx={{ mr: 2, color: 'text.secondary' }} />
-                      <ListItemText
-                        primary="Email"
-                        secondary={user.email}
-                      />
+                    <ListItemText
+                      primary="Email"
+                      secondary={user.email || ''}
+                    />
                     </ListItem>
                     <ListItem>
                       <Phone sx={{ mr: 2, color: 'text.secondary' }} />
-                      <ListItemText
-                        primary="Phone"
-                        secondary={user.contactInfo.phone}
-                      />
+                    <ListItemText
+                      primary="Phone"
+                      secondary={user.contactInfo?.phone || ''}
+                    />
                     </ListItem>
                     <ListItem>
                       <CalendarToday sx={{ mr: 2, color: 'text.secondary' }} />
-                      <ListItemText
-                        primary="Date of Birth"
-                        secondary={new Date(user.personalInfo.dateOfBirth).toLocaleDateString()}
-                      />
+                    <ListItemText
+                      primary="Date of Birth"
+                      secondary={user.personalInfo?.dateOfBirth ? new Date(user.personalInfo.dateOfBirth).toLocaleDateString() : ''}
+                    />
                     </ListItem>
                     <ListItem>
                       <LocationOn sx={{ mr: 2, color: 'text.secondary' }} />
-                      <ListItemText
-                        primary="Address"
-                        secondary={`${user.contactInfo.address.street}, ${user.contactInfo.address.city}, ${user.contactInfo.address.state}, ${user.contactInfo.address.country}`}
-                      />
+                    <ListItemText
+                      primary="Address"
+                      secondary={`${user.contactInfo?.address?.street || ''}, ${user.contactInfo?.address?.city || ''}, ${user.contactInfo?.address?.state || ''}, ${user.contactInfo?.address?.country || ''}`}
+                    />
                     </ListItem>
                   </List>
                 </CardContent>
@@ -292,40 +309,40 @@ const ProfilePage: React.FC = () => {
                   <List>
                     <ListItem>
                       <School sx={{ mr: 2, color: 'text.secondary' }} />
-                      <ListItemText
-                        primary="Program"
-                        secondary={user.academicInfo.program}
-                      />
+                    <ListItemText
+                      primary="Program"
+                      secondary={user.academicInfo?.program || ''}
+                    />
                     </ListItem>
                     <ListItem>
-                      <ListItemText
-                        primary="Department"
-                        secondary={user.academicInfo.department}
-                      />
+                    <ListItemText
+                      primary="Department"
+                      secondary={user.academicInfo?.department || ''}
+                    />
                     </ListItem>
                     <ListItem>
-                      <ListItemText
-                        primary="Faculty"
-                        secondary={user.academicInfo.faculty}
-                      />
+                    <ListItemText
+                      primary="Faculty"
+                      secondary={user.academicInfo?.faculty || ''}
+                    />
                     </ListItem>
                     <ListItem>
-                      <ListItemText
-                        primary="Level"
-                        secondary={user.academicInfo.level}
-                      />
+                    <ListItemText
+                      primary="Level"
+                      secondary={user.academicInfo?.level || ''}
+                    />
                     </ListItem>
                     <ListItem>
-                      <ListItemText
-                        primary="GPA"
-                        secondary={user.academicInfo.gpa.toFixed(2)}
-                      />
+                    <ListItemText
+                      primary="GPA"
+                      secondary={user.academicInfo?.gpa ? user.academicInfo.gpa.toFixed(2) : ''}
+                    />
                     </ListItem>
                     <ListItem>
-                      <ListItemText
-                        primary="Credits"
-                        secondary={`${user.academicInfo.completedCredits} / ${user.academicInfo.totalCredits}`}
-                      />
+                    <ListItemText
+                      primary="Credits"
+                      secondary={`${user.academicInfo?.completedCredits || 0} / ${user.academicInfo?.totalCredits || 0}`}
+                    />
                     </ListItem>
                   </List>
                 </CardContent>

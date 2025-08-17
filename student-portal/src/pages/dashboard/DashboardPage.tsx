@@ -221,7 +221,7 @@ const DashboardPage: React.FC = () => {
       {/* Welcome Header */}
       <Box mb={4}>
         <Typography variant="h4" fontWeight="bold" gutterBottom>
-          {getGreeting()}, {user?.personalInfo.firstName}! 👋
+          {getGreeting()}, {user?.personalInfo?.firstName}! 👋
         </Typography>
         <Typography variant="body1" color="text.secondary">
           Here's what's happening with your academic journey today.
@@ -229,7 +229,7 @@ const DashboardPage: React.FC = () => {
       </Box>
 
       {/* Academic Standing Alert */}
-      {user?.academicInfo.gpa && user.academicInfo.gpa < 2.0 && (
+      {user?.academicInfo?.gpa && user.academicInfo.gpa < 2.0 && (
         <Alert severity="warning" sx={{ mb: 3 }}>
           <Typography variant="body2">
             Your current GPA is below the minimum requirement. Please consider meeting with your academic advisor.

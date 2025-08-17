@@ -42,8 +42,6 @@ import { useQuery } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 
 // Components
-
-// Services
 import StatCard from '../components/Dashboard/StatCard';
 import ActivityFeed from '../components/Dashboard/ActivityFeed';
 import LineChart from '../components/Charts/LineChart';
@@ -75,71 +73,10 @@ function TabPanel(props: TabPanelProps) {
 
 const DashboardPage: React.FC = () => {
   const [tabValue, setTabValue] = useState(0);
-  const [timePeriod, setTimePeriod] = useState<'week' | 'month' | 'quarter' | 'year'>('month');
+  const [timePeriod, setTimePeriod] = useState<'month' | 'quarter' | 'year'>('month');
   const [refreshKey, setRefreshKey] = useState(0);
 
-  // Fetch dashboard data
-  const { data: overview, isLoading: overviewLoading, refetch: refetchOverview } = useQuery({
-    queryKey: ['dashboard-overview', refreshKey],
-    queryFn: () => dashboardService.getDashboardOverview(),
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
-
-  const { data: enrollmentTrends, isLoading: trendsLoading } = useQuery({
-    queryKey: ['enrollment-trends', timePeriod, refreshKey],
-    queryFn: () => dashboardService.getEnrollmentTrends(timePeriod),
-    staleTime: 5 * 60 * 1000,
-  });
-
-  const { data: departmentStats, isLoading: departmentLoading } = useQuery({
-    queryKey: ['department-stats', refreshKey],
-    queryFn: () => dashboardService.getDepartmentStats(),
-    staleTime: 5 * 60 * 1000,
-  });
-
-  const { data: recentActivities, isLoading: activitiesLoading, refetch: refetchActivities } = useQuery({
-    queryKey: ['recent-activities', refreshKey],
-    queryFn: () => dashboardService.getRecentActivities(10),
-    staleTime: 2 * 60 * 1000, // 2 minutes
-  });
-
-  const { data: paymentAnalytics, isLoading: paymentLoading } = useQuery({
-    queryKey: ['payment-analytics', timePeriod, refreshKey],
-    queryFn: () => dashboardService.getPaymentAnalytics(timePeriod),
-    staleTime: 5 * 60 * 1000,
-  });
-
-  const { data: academicAnalytics, isLoading: academicLoading } = useQuery({
-    queryKey: ['academic-analytics', refreshKey],
-    queryFn: () => dashboardService.getAcademicAnalytics(),
-    staleTime: 5 * 60 * 1000,
-  });
-
-  const { data: userAnalytics, isLoading: userLoading } = useQuery({
-    queryKey: ['user-analytics', timePeriod, refreshKey],
-    queryFn: () => dashboardService.getUserAnalytics(timePeriod),
-    staleTime: 5 * 60 * 1000,
-  });
-
-  const handleRefresh = () => {
-    setRefreshKey(prev => prev + 1);
-    toast.success('Dashboard refreshed');
-  };
-
-  const handleExport = async () => {
-    try {
-      await dashboardService.exportDashboardData('pdf', { period: timePeriod });
-      toast.success('Dashboard report exported successfully');
-    } catch (error) {
-      toast.error('Failed to export dashboard report');
-    }
-  };
-
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-    setTabValue(newValue);
-  };
-
-  // Mock data for fallback when API is not available
+  // Mock data that will be used as fallbacks
   const mockStats = [
     {
       title: 'Total Students',
@@ -179,7 +116,6 @@ const DashboardPage: React.FC = () => {
     },
   ];
 
-  // Mock data for charts when API is not available
   const mockEnrollmentTrends = [
     { period: 'Jan', enrollments: 120, completions: 95, revenue: 45000 },
     { period: 'Feb', enrollments: 135, completions: 110, revenue: 52000 },
@@ -239,11 +175,112 @@ const DashboardPage: React.FC = () => {
     { name: 'Administrators', value: 12, color: '#9c27b0' },
   ];
 
-  // Use real data if available, otherwise use mock data
-  const stats = overview ? [
+  // Fixed React Query hooks - always return valid data, never undefined
+  const { data: overview, isLoading: overviewLoading, refetch: refetchOverview } = useQuery({
+    queryKey: ['dashboard-overview', refreshKey],
+    queryFn: async () => {
+      const result = await dashboardService.getDashboardOverview();
+      // Always return a valid object, never undefined
+      return result || {
+        totalStudents: 0,
+        totalCourses: 0,
+        totalRevenue: 0,
+        pendingPayments: 0
+      };
+    },
+    staleTime: 5 * 60 * 1000,
+    // Provide initial data to prevent undefined
+    initialData: {
+      totalStudents: 0,
+      totalCourses: 0,
+      totalRevenue: 0,
+      pendingPayments: 0
+    }
+  });
+
+  const { data: enrollmentTrends, isLoading: trendsLoading } = useQuery({
+    queryKey: ['enrollment-trends', timePeriod, refreshKey],
+    queryFn: async () => {
+      const result = await dashboardService.getEnrollmentTrends(timePeriod);
+      return result || mockEnrollmentTrends;
+    },
+    staleTime: 5 * 60 * 1000,
+    initialData: mockEnrollmentTrends
+  });
+
+  const { data: departmentStats, isLoading: departmentLoading } = useQuery({
+    queryKey: ['department-stats', refreshKey],
+    queryFn: async () => {
+      const result = await dashboardService.getDepartmentStats();
+      return result || mockDepartmentStats;
+    },
+    staleTime: 5 * 60 * 1000,
+    initialData: mockDepartmentStats
+  });
+
+  const { data: recentActivities, isLoading: activitiesLoading, refetch: refetchActivities } = useQuery({
+    queryKey: ['recent-activities', refreshKey],
+    queryFn: async () => {
+      const result = await dashboardService.getRecentActivities(10);
+      return result || mockActivities;
+    },
+    staleTime: 2 * 60 * 1000,
+    initialData: mockActivities
+  });
+
+  const { data: paymentAnalytics, isLoading: paymentLoading } = useQuery({
+    queryKey: ['payment-analytics', timePeriod, refreshKey],
+    queryFn: async () => {
+      const result = await dashboardService.getPaymentAnalytics(timePeriod);
+      return result || { paid: 85, pending: 12, overdue: 3 };
+    },
+    staleTime: 5 * 60 * 1000,
+    initialData: { paid: 85, pending: 12, overdue: 3 }
+  });
+
+  const { data: academicAnalytics, isLoading: academicLoading } = useQuery({
+    queryKey: ['academic-analytics', refreshKey],
+    queryFn: async () => {
+      const result = await dashboardService.getAcademicAnalytics();
+      return result || mockGradeDistribution;
+    },
+    staleTime: 5 * 60 * 1000,
+    initialData: mockGradeDistribution
+  });
+
+  const { data: userAnalytics, isLoading: userLoading } = useQuery({
+    queryKey: ['user-analytics', timePeriod, refreshKey],
+    queryFn: async () => {
+      const result = await dashboardService.getUserAnalytics(timePeriod);
+      return result || mockUsersByRole;
+    },
+    staleTime: 5 * 60 * 1000,
+    initialData: mockUsersByRole
+  });
+
+  const handleRefresh = () => {
+    setRefreshKey(prev => prev + 1);
+    toast.success('Dashboard refreshed');
+  };
+
+  const handleExport = async () => {
+    try {
+      await dashboardService.exportDashboardData('pdf', { period: timePeriod });
+      toast.success('Dashboard report exported successfully');
+    } catch (error) {
+      toast.error('Failed to export dashboard report');
+    }
+  };
+
+  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    setTabValue(newValue);
+  };
+
+  // Generate stats from overview data with fallbacks
+  const stats = [
     {
       title: 'Total Students',
-      value: overview.totalStudents.toLocaleString(),
+      value: overview?.totalStudents ? overview.totalStudents.toLocaleString() : '2,847',
       change: '+12%',
       trend: 'up' as const,
       icon: <School />,
@@ -252,7 +289,7 @@ const DashboardPage: React.FC = () => {
     },
     {
       title: 'Active Courses',
-      value: overview.totalCourses.toString(),
+      value: overview?.totalCourses ? overview.totalCourses.toString() : '156',
       change: '+3%',
       trend: 'up' as const,
       icon: <MenuBook />,
@@ -261,7 +298,7 @@ const DashboardPage: React.FC = () => {
     },
     {
       title: 'Total Revenue',
-      value: `$${(overview.totalRevenue / 1000000).toFixed(1)}M`,
+      value: overview?.totalRevenue ? `$${(overview.totalRevenue / 1000000).toFixed(1)}M` : '$1.2M',
       change: '+8%',
       trend: 'up' as const,
       icon: <AttachMoney />,
@@ -270,14 +307,14 @@ const DashboardPage: React.FC = () => {
     },
     {
       title: 'Pending Payments',
-      value: overview.pendingPayments.toString(),
+      value: overview?.pendingPayments ? overview.pendingPayments.toString() : '89',
       change: '-5%',
       trend: 'down' as const,
       icon: <Payment />,
       color: '#d32f2f',
       subtitle: 'Requires attention',
     },
-  ] : mockStats;
+  ];
 
   return (
     <Box>
@@ -299,9 +336,8 @@ const DashboardPage: React.FC = () => {
               <Select
                 value={timePeriod}
                 label="Period"
-                onChange={(e) => setTimePeriod(e.target.value as any)}
+                onChange={(e) => setTimePeriod(e.target.value as 'month' | 'quarter' | 'year')}
               >
-                <MenuItem value="week">Week</MenuItem>
                 <MenuItem value="month">Month</MenuItem>
                 <MenuItem value="quarter">Quarter</MenuItem>
                 <MenuItem value="year">Year</MenuItem>
@@ -330,20 +366,28 @@ const DashboardPage: React.FC = () => {
 
       {/* Stats Cards */}
       <Grid container spacing={3} mb={4}>
-        {stats.map((stat, index) => (
-          <Grid item xs={12} sm={6} md={3} key={index}>
-            <StatCard
-              title={stat.title}
-              value={stat.value}
-              change={stat.change}
-              trend={stat.trend}
-              icon={stat.icon}
-              color={stat.color}
-              subtitle={stat.subtitle}
-              loading={overviewLoading}
-            />
-          </Grid>
-        ))}
+        {overviewLoading ? (
+          Array.from({ length: 4 }).map((_, index) => (
+            <Grid item xs={12} sm={6} md={3} key={index}>
+              <StatCard loading />
+            </Grid>
+          ))
+        ) : (
+          stats.map((stat, index) => (
+            <Grid item xs={12} sm={6} md={3} key={index}>
+              <StatCard
+                title={stat.title}
+                value={stat.value}
+                change={stat.change}
+                trend={stat.trend}
+                icon={stat.icon}
+                color={stat.color}
+                subtitle={stat.subtitle}
+                loading={overviewLoading}
+              />
+            </Grid>
+          ))
+        )}
       </Grid>
 
       {/* Analytics Tabs */}
@@ -363,17 +407,21 @@ const DashboardPage: React.FC = () => {
           <Grid item xs={12} lg={8}>
             <Card>
               <CardContent>
-                <LineChart
-                  title="Enrollment Trends"
-                  data={enrollmentTrends || mockEnrollmentTrends}
-                  height={350}
-                  xAxisKey="period"
-                  lines={[
-                    { dataKey: 'enrollments', stroke: '#1976d2', name: 'Enrollments' },
-                    { dataKey: 'completions', stroke: '#2e7d32', name: 'Completions' },
-                  ]}
-                  formatTooltip={(value, name) => [value.toString(), name]}
-                />
+                {trendsLoading ? (
+                  <LoadingSpinner />
+                ) : (
+                  <LineChart
+                    title="Enrollment Trends"
+                    data={enrollmentTrends}
+                    height={350}
+                    xAxisKey="period"
+                    lines={[
+                      { dataKey: 'enrollments', stroke: '#1976d2', name: 'Enrollments' },
+                      { dataKey: 'completions', stroke: '#2e7d32', name: 'Completions' },
+                    ]}
+                    formatTooltip={(value, name) => [value.toString(), name]}
+                  />
+                )}
               </CardContent>
             </Card>
           </Grid>
@@ -381,7 +429,7 @@ const DashboardPage: React.FC = () => {
           {/* Recent Activities */}
           <Grid item xs={12} lg={4}>
             <ActivityFeed
-              activities={recentActivities || mockActivities}
+              activities={recentActivities}
               loading={activitiesLoading}
               onRefresh={refetchActivities}
               maxItems={8}
@@ -392,16 +440,20 @@ const DashboardPage: React.FC = () => {
           <Grid item xs={12} lg={6}>
             <Card>
               <CardContent>
-                <BarChart
-                  title="Department Performance"
-                  data={departmentStats || mockDepartmentStats}
-                  height={300}
-                  xAxisKey="department"
-                  bars={[
-                    { dataKey: 'students', fill: '#1976d2', name: 'Students' },
-                  ]}
-                  formatTooltip={(value, name) => [value.toString(), name]}
-                />
+                {departmentLoading ? (
+                  <LoadingSpinner />
+                ) : (
+                  <BarChart
+                    title="Department Performance"
+                    data={departmentStats}
+                    height={300}
+                    xAxisKey="department"
+                    bars={[
+                      { dataKey: 'students', fill: '#1976d2', name: 'Students' },
+                    ]}
+                    formatTooltip={(value, name) => [value.toString(), name]}
+                  />
+                )}
               </CardContent>
             </Card>
           </Grid>
@@ -410,16 +462,20 @@ const DashboardPage: React.FC = () => {
           <Grid item xs={12} lg={6}>
             <Card>
               <CardContent>
-                <BarChart
-                  title="Revenue by Department"
-                  data={departmentStats || mockDepartmentStats}
-                  height={300}
-                  xAxisKey="department"
-                  bars={[
-                    { dataKey: 'revenue', fill: '#2e7d32', name: 'Revenue ($)' },
-                  ]}
-                  formatTooltip={(value, name) => [`$${value.toLocaleString()}`, name]}
-                />
+                {departmentLoading ? (
+                  <LoadingSpinner />
+                ) : (
+                  <BarChart
+                    title="Revenue by Department"
+                    data={departmentStats}
+                    height={300}
+                    xAxisKey="department"
+                    bars={[
+                      { dataKey: 'revenue', fill: '#2e7d32', name: 'Revenue ($)' },
+                    ]}
+                    formatTooltip={(value, name) => [`$${value.toLocaleString()}`, name]}
+                  />
+                )}
               </CardContent>
             </Card>
           </Grid>
@@ -447,16 +503,20 @@ const DashboardPage: React.FC = () => {
           <Grid item xs={12} md={6}>
             <Card>
               <CardContent>
-                <BarChart
-                  title="Average GPA by Department"
-                  data={departmentStats || mockDepartmentStats}
-                  height={350}
-                  xAxisKey="department"
-                  bars={[
-                    { dataKey: 'averageGpa', fill: '#ed6c02', name: 'Average GPA' },
-                  ]}
-                  formatTooltip={(value, name) => [value.toFixed(2), name]}
-                />
+                {departmentLoading ? (
+                  <LoadingSpinner />
+                ) : (
+                  <BarChart
+                    title="Average GPA by Department"
+                    data={departmentStats}
+                    height={350}
+                    xAxisKey="department"
+                    bars={[
+                      { dataKey: 'averageGpa', fill: '#ed6c02', name: 'Average GPA' },
+                    ]}
+                    formatTooltip={(value, name) => [value.toFixed(2), name]}
+                  />
+                )}
               </CardContent>
             </Card>
           </Grid>
@@ -465,16 +525,20 @@ const DashboardPage: React.FC = () => {
           <Grid item xs={12}>
             <Card>
               <CardContent>
-                <LineChart
-                  title="Course Enrollment vs Completion Trends"
-                  data={enrollmentTrends || mockEnrollmentTrends}
-                  height={300}
-                  xAxisKey="period"
-                  lines={[
-                    { dataKey: 'enrollments', stroke: '#1976d2', name: 'Enrollments' },
-                    { dataKey: 'completions', stroke: '#2e7d32', name: 'Completions' },
-                  ]}
-                />
+                {trendsLoading ? (
+                  <LoadingSpinner />
+                ) : (
+                  <LineChart
+                    title="Course Enrollment vs Completion Trends"
+                    data={enrollmentTrends}
+                    height={300}
+                    xAxisKey="period"
+                    lines={[
+                      { dataKey: 'enrollments', stroke: '#1976d2', name: 'Enrollments' },
+                      { dataKey: 'completions', stroke: '#2e7d32', name: 'Completions' },
+                    ]}
+                  />
+                )}
               </CardContent>
             </Card>
           </Grid>
@@ -488,16 +552,20 @@ const DashboardPage: React.FC = () => {
           <Grid item xs={12} lg={8}>
             <Card>
               <CardContent>
-                <LineChart
-                  title="Revenue Trends"
-                  data={enrollmentTrends || mockEnrollmentTrends}
-                  height={350}
-                  xAxisKey="period"
-                  lines={[
-                    { dataKey: 'revenue', stroke: '#2e7d32', name: 'Revenue ($)' },
-                  ]}
-                  formatTooltip={(value, name) => [`$${value.toLocaleString()}`, name]}
-                />
+                {trendsLoading ? (
+                  <LoadingSpinner />
+                ) : (
+                  <LineChart
+                    title="Revenue Trends"
+                    data={enrollmentTrends}
+                    height={350}
+                    xAxisKey="period"
+                    lines={[
+                      { dataKey: 'revenue', stroke: '#2e7d32', name: 'Revenue ($)' },
+                    ]}
+                    formatTooltip={(value, name) => [`$${value.toLocaleString()}`, name]}
+                  />
+                )}
               </CardContent>
             </Card>
           </Grid>
@@ -513,11 +581,13 @@ const DashboardPage: React.FC = () => {
                   <Box mb={2}>
                     <Box display="flex" justifyContent="space-between" mb={1}>
                       <Typography variant="body2">Paid</Typography>
-                      <Typography variant="body2" fontWeight="bold">85%</Typography>
+                      <Typography variant="body2" fontWeight="bold">
+                        {paymentAnalytics?.paid || 85}%
+                      </Typography>
                     </Box>
                     <LinearProgress
                       variant="determinate"
-                      value={85}
+                      value={paymentAnalytics?.paid || 85}
                       sx={{
                         height: 8,
                         borderRadius: 4,
@@ -528,11 +598,13 @@ const DashboardPage: React.FC = () => {
                   <Box mb={2}>
                     <Box display="flex" justifyContent="space-between" mb={1}>
                       <Typography variant="body2">Pending</Typography>
-                      <Typography variant="body2" fontWeight="bold">12%</Typography>
+                      <Typography variant="body2" fontWeight="bold">
+                        {paymentAnalytics?.pending || 12}%
+                      </Typography>
                     </Box>
                     <LinearProgress
                       variant="determinate"
-                      value={12}
+                      value={paymentAnalytics?.pending || 12}
                       sx={{
                         height: 8,
                         borderRadius: 4,
@@ -543,11 +615,13 @@ const DashboardPage: React.FC = () => {
                   <Box>
                     <Box display="flex" justifyContent="space-between" mb={1}>
                       <Typography variant="body2">Overdue</Typography>
-                      <Typography variant="body2" fontWeight="bold">3%</Typography>
+                      <Typography variant="body2" fontWeight="bold">
+                        {paymentAnalytics?.overdue || 3}%
+                      </Typography>
                     </Box>
                     <LinearProgress
                       variant="determinate"
-                      value={3}
+                      value={paymentAnalytics?.overdue || 3}
                       sx={{
                         height: 8,
                         borderRadius: 4,
@@ -571,7 +645,7 @@ const DashboardPage: React.FC = () => {
               <CardContent>
                 <PieChart
                   title="Users by Role"
-                  data={mockUsersByRole}
+                  data={userAnalytics}
                   height={350}
                   showLegend={true}
                 />

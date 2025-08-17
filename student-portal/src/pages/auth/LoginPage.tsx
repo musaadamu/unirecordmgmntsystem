@@ -41,7 +41,7 @@ const loginSchema = yup.object({
     .string()
     .min(6, 'Password must be at least 6 characters')
     .required('Password is required'),
-  rememberMe: yup.boolean().default(false),
+  rememberMe: yup.boolean().required(),
 });
 
 const LoginPage: React.FC = () => {
@@ -69,8 +69,9 @@ const LoginPage: React.FC = () => {
   const loginMutation = useMutation({
     mutationFn: authService.login,
     onSuccess: (data) => {
-      login(data.user, data.token);
-      toast.success(`Welcome back, ${data.user.personalInfo.firstName}!`);
+      login(data.user, data.accessToken);
+      const firstName = data.user?.personalInfo?.firstName || 'User';
+      toast.success(`Welcome back, ${firstName}!`);
       navigate(from, { replace: true });
     },
     onError: (error: any) => {
@@ -81,6 +82,8 @@ const LoginPage: React.FC = () => {
         setError('password', { message: 'Invalid email or password' });
       } else if (error.response?.status === 403) {
         setError('email', { message: 'Account is inactive. Please contact administration.' });
+      } else if (error.response?.status === 429) {
+        toast.error('Too many login attempts. Please wait and try again later.');
       } else {
         toast.error(message);
       }

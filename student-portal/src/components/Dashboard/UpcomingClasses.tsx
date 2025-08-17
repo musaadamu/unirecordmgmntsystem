@@ -181,9 +181,10 @@ const UpcomingClasses: React.FC<UpcomingClassesProps> = ({
                   py: 2,
                   borderBottom: index < classes.length - 1 ? '1px solid' : 'none',
                   borderColor: 'divider',
+                  alignItems: 'flex-start',
                 }}
               >
-                <ListItemIcon>
+                <ListItemIcon sx={{ mt: 1 }}>
                   <Avatar
                     sx={{
                       bgcolor: `${getClassTypeColor(classItem.type)}15`,
@@ -196,71 +197,70 @@ const UpcomingClasses: React.FC<UpcomingClassesProps> = ({
                   </Avatar>
                 </ListItemIcon>
                 
-                <ListItemText
-                  primary={
-                    <Box display="flex" alignItems="center" gap={1} mb={0.5}>
-                      <Typography variant="subtitle2" fontWeight="bold">
-                        {classItem.course.courseCode}
+                <Box sx={{ flex: 1, minWidth: 0, mr: 2 }}>
+                  {/* Primary content */}
+                  <Box display="flex" alignItems="center" gap={1} mb={0.5}>
+                    <Typography variant="subtitle2" fontWeight="bold">
+                      {classItem.course.courseCode}
+                    </Typography>
+                    <Chip
+                      label={classItem.type}
+                      size="small"
+                      sx={{
+                        bgcolor: `${getClassTypeColor(classItem.type)}15`,
+                        color: getClassTypeColor(classItem.type),
+                        fontWeight: 500,
+                      }}
+                    />
+                    <Chip
+                      label={classItem.status}
+                      size="small"
+                      color={getStatusColor(classItem.status) as any}
+                      variant="outlined"
+                    />
+                  </Box>
+
+                  {/* Course name */}
+                  <Typography variant="body2" color="text.primary" gutterBottom>
+                    {classItem.course.courseName}
+                  </Typography>
+                  
+                  {/* Time and date info */}
+                  <Box display="flex" alignItems="center" gap={2} mb={1}>
+                    <Box display="flex" alignItems="center" gap={0.5}>
+                      <Schedule fontSize="small" color="action" />
+                      <Typography variant="caption">
+                        {formatClassTime(classItem.startTime, classItem.endTime)}
                       </Typography>
-                      <Chip
-                        label={classItem.type}
-                        size="small"
-                        sx={{
-                          bgcolor: `${getClassTypeColor(classItem.type)}15`,
-                          color: getClassTypeColor(classItem.type),
-                          fontWeight: 500,
-                        }}
-                      />
-                      <Chip
-                        label={classItem.status}
-                        size="small"
-                        color={getStatusColor(classItem.status) as any}
-                        variant="outlined"
-                      />
                     </Box>
-                  }
-                  secondary={
-                    <Box>
-                      <Typography variant="body2" color="text.primary" gutterBottom>
-                        {classItem.course.courseName}
+                    
+                    <Box display="flex" alignItems="center" gap={0.5}>
+                      <CalendarToday fontSize="small" color="action" />
+                      <Typography variant="caption">
+                        {formatClassDate(classItem.date)}
                       </Typography>
-                      
-                      <Box display="flex" alignItems="center" gap={2} mb={1}>
-                        <Box display="flex" alignItems="center" gap={0.5}>
-                          <Schedule fontSize="small" color="action" />
-                          <Typography variant="caption">
-                            {formatClassTime(classItem.startTime, classItem.endTime)}
-                          </Typography>
-                        </Box>
-                        
-                        <Box display="flex" alignItems="center" gap={0.5}>
-                          <CalendarToday fontSize="small" color="action" />
-                          <Typography variant="caption">
-                            {formatClassDate(classItem.date)}
-                          </Typography>
-                        </Box>
-                      </Box>
-                      
-                      <Box display="flex" alignItems="center" gap={2}>
-                        <Box display="flex" alignItems="center" gap={0.5}>
-                          <LocationOn fontSize="small" color="action" />
-                          <Typography variant="caption">
-                            {classItem.location.building} {classItem.location.room}
-                          </Typography>
-                        </Box>
-                        
-                        <Box display="flex" alignItems="center" gap={0.5}>
-                          <Person fontSize="small" color="action" />
-                          <Typography variant="caption">
-                            {classItem.course.instructor.name}
-                          </Typography>
-                        </Box>
-                      </Box>
                     </Box>
-                  }
-                />
+                  </Box>
+                  
+                  {/* Location and instructor info */}
+                  <Box display="flex" alignItems="center" gap={2}>
+                    <Box display="flex" alignItems="center" gap={0.5}>
+                      <LocationOn fontSize="small" color="action" />
+                      <Typography variant="caption">
+                        {classItem.location.building} {classItem.location.room}
+                      </Typography>
+                    </Box>
+                    
+                    <Box display="flex" alignItems="center" gap={0.5}>
+                      <Person fontSize="small" color="action" />
+                      <Typography variant="caption">
+                        {classItem.course.instructor.name}
+                      </Typography>
+                    </Box>
+                  </Box>
+                </Box>
                 
-                <Box textAlign="right" ml={2}>
+                <Box textAlign="right">
                   <Typography
                     variant="caption"
                     sx={{

@@ -1,3 +1,4 @@
+import { useRBACStore } from '@/stores/rbacStore';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { User, AuthState } from '@/types';
@@ -20,6 +21,7 @@ export const useAuthStore = create<AuthStore>()(
       isLoading: true,
 
       login: (user: User, token: string) => {
+        console.log('AuthStore login called with token:', token);
         set({
           user,
           token,
@@ -28,6 +30,18 @@ export const useAuthStore = create<AuthStore>()(
         });
         // Load user permissions after login
         get().loadUserPermissions();
+      },
+
+      loadUserProfile: async () => {
+        set({ isLoading: true });
+        try {
+          const userProfile = await import('@/services/authService').then(mod => mod.default.getProfile());
+          set({ user: userProfile, isLoading: false, isAuthenticated: true });
+          await get().loadUserPermissions();
+        } catch (error) {
+          console.error('Failed to load user profile:', error);
+          set({ isLoading: false });
+        }
       },
 
       logout: () => {
@@ -114,6 +128,7 @@ export const useAuthStore = create<AuthStore>()(
           rbacStore.setUserPermissions(mockUserPermissions);
         } catch (error) {
           console.error('Failed to load user permissions:', error);
+          // Optionally, set an error state here if needed
         }
       },
 
@@ -147,6 +162,7 @@ export const useAuthStore = create<AuthStore>()(
         isAuthenticated: state.isAuthenticated,
       }),
       onRehydrateStorage: () => (state) => {
+        console.log('AuthStore rehydrated with token:', state?.token);
         // Set loading to false after rehydration
         if (state) {
           state.isLoading = false;

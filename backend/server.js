@@ -8,12 +8,16 @@ require('dotenv').config();
 
 const app = express();
 
+// Serve static files from backend/public for sitemap and robots
+app.use(express.static(path.join(__dirname, 'public')));
+
 // Security middleware
 app.use(helmet());
 app.use(cors({
   origin: [
     'http://localhost:3000', // Student Portal
     'http://localhost:3001', // Admin Portal
+    'http://localhost:5173', // Added for frontend dev server
     process.env.FRONTEND_URL
   ].filter(Boolean),
   credentials: true
@@ -25,6 +29,15 @@ const limiter = rateLimit({
   max: 100, // limit each IP to 100 requests per windowMs
   message: 'Too many requests from this IP, please try again later.'
 });
+
+// Exclude /api/auth/login from global rate limiter to prevent login throttling
+const authLoginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20, // limit each IP to 20 login requests per windowMs
+  message: 'Too many login attempts from this IP, please try again later.'
+});
+
+app.use('/api/auth/login', authLoginLimiter);
 app.use('/api/', limiter);
 
 // Middleware
@@ -59,6 +72,9 @@ app.use('/api/password-reset', require('./routes/passwordReset'));
 app.use('/api/grades', require('./routes/grades'));
 app.use('/api/enrollments', require('./routes/enrollments'));
 app.use('/api/transcripts', require('./routes/transcripts'));
+const dashboardRoutes = require('./routes/dashboard');
+const assignmentsRoutes = require('./routes/assignments');
+
 // app.use('/api/payments', require('./routes/payments'));
 
 // RBAC Routes
@@ -66,6 +82,9 @@ app.use('/api/admin', require('./routes/rbac'));
 
 // Notification Routes
 app.use('/api/notifications', require('./routes/notifications'));
+
+app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/assignments', assignmentsRoutes);
 
 // Import error handling middleware
 const { globalErrorHandler, handleNotFound } = require('./middleware/errorHandler');

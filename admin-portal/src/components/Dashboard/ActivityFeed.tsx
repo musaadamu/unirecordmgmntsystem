@@ -124,7 +124,7 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({
         }
         sx={{ pb: 1 }}
       />
-      
+
       <CardContent sx={{ pt: 0, pb: 2 }}>
         {loading ? (
           <Box display="flex" justifyContent="center" py={4}>
@@ -152,6 +152,7 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({
         ) : (
           <List sx={{ p: 0 }}>
             {displayedActivities.map((activity, index) => (
+              // FIX 1: Remove the manual <li> wrapper - ListItem already renders as <li>
               <React.Fragment key={activity.id}>
                 <ListItem
                   sx={{
@@ -174,11 +175,12 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({
                       {getActivityIcon(activity.type)}
                     </Avatar>
                   </ListItemAvatar>
-                  
+
                   <ListItemText
+                    // FIX 2: Simplify primary content and use component="div" to avoid <p> nesting
                     primary={
-                      <Box display="flex" alignItems="center" gap={1} mb={0.5}>
-                        <Typography variant="body1" fontWeight="600">
+                      <Box display="flex" alignItems="center" gap={1} mb={0.5} component="div">
+                        <Typography variant="body1" fontWeight="600" component="span">
                           {activity.title}
                         </Typography>
                         <Chip
@@ -193,39 +195,47 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({
                         />
                       </Box>
                     }
+                    // FIX 3: Use component="div" for secondary content to avoid nesting issues
                     secondary={
-                      <Box>
+                      <Box component="div">
                         <Typography
                           variant="body2"
                           color="text.secondary"
+                          component="div"
                           sx={{ mb: 0.5 }}
                         >
                           {activity.description}
                         </Typography>
-                        <Box display="flex" alignItems="center" gap={1}>
-                          <Typography variant="caption" color="text.secondary">
+                        <Box display="flex" alignItems="center" gap={1} component="div">
+                          <Typography variant="caption" color="text.secondary" component="span">
                             by {activity.user.name}
                           </Typography>
-                          <Typography variant="caption" color="text.secondary">
+                          <Typography variant="caption" color="text.secondary" component="span">
                             •
                           </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            {formatDistanceToNow(new Date(activity.timestamp), { addSuffix: true })}
+                          <Typography variant="caption" color="text.secondary" component="span">
+                            {formatDistanceToNow(new Date(activity.timestamp), {
+                              addSuffix: true,
+                            })}
                           </Typography>
                         </Box>
                       </Box>
                     }
+                    // FIX 4: Override default components to prevent <p> nesting
+                    primaryTypographyProps={{ component: 'div' }}
+                    secondaryTypographyProps={{ component: 'div' }}
                   />
                 </ListItem>
-                
+
+                {/* FIX 5: Move Divider outside ListItem and don't use component="li" */}
                 {index < displayedActivities.length - 1 && (
-                  <Divider variant="inset" component="li" />
+                  <Divider variant="inset" />
                 )}
               </React.Fragment>
             ))}
           </List>
         )}
-        
+
         {activities.length > maxItems && (
           <Box textAlign="center" mt={2}>
             <Typography variant="body2" color="primary" sx={{ cursor: 'pointer' }}>

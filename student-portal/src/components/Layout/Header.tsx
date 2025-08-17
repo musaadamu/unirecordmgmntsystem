@@ -128,7 +128,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick, isMobile }) => {
           </Typography>
           {user && (
             <Typography variant="caption" color="text.secondary">
-              Welcome back, {user.personalInfo.firstName}!
+              Welcome back, {user?.personalInfo?.firstName}!
             </Typography>
           )}
         </Box>
@@ -139,10 +139,10 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick, isMobile }) => {
             <School sx={{ mr: 1, color: 'primary.main' }} />
             <Box>
               <Typography variant="body2" fontWeight="bold">
-                {user.academicInfo.currentSemester} {user.academicInfo.academicYear}
+                {user?.academicInfo?.currentSemester ?? ''} {user?.academicInfo?.academicYear ?? ''}
               </Typography>
               <Typography variant="caption" color="text.secondary">
-                GPA: {user.academicInfo.gpa.toFixed(2)}
+                GPA: {user?.academicInfo?.gpa ? user.academicInfo.gpa.toFixed(2) : ''}
               </Typography>
             </Box>
           </Box>
@@ -169,16 +169,16 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick, isMobile }) => {
         </Tooltip>
 
         {/* Profile Menu */}
-        <Tooltip title="Account">
+          <Tooltip title="Account">
           <IconButton
             onClick={handleProfileMenuOpen}
             sx={{ p: 0 }}
           >
             <Avatar
               sx={{ width: 40, height: 40 }}
-              src={user?.personalInfo.profilePicture}
+              src={user?.personalInfo?.profilePicture}
             >
-              {user?.personalInfo.firstName[0]}{user?.personalInfo.lastName[0]}
+              {user?.personalInfo?.firstName?.[0]}{user?.personalInfo?.lastName?.[0]}
             </Avatar>
           </IconButton>
         </Tooltip>
@@ -210,13 +210,13 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick, isMobile }) => {
           {user && (
             <Box sx={{ px: 2, py: 1 }}>
               <Typography variant="subtitle2" fontWeight="bold">
-                {user.personalInfo.firstName} {user.personalInfo.lastName}
+                {user?.personalInfo?.firstName} {user?.personalInfo?.lastName}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                {user.email}
+                {user?.email}
               </Typography>
               <Typography variant="caption" color="text.secondary">
-                {user.academicInfo.studentId}
+                {user?.academicInfo?.studentId}
               </Typography>
             </Box>
           )}

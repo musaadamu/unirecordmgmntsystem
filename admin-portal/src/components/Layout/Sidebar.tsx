@@ -29,9 +29,6 @@ import {
   PersonAdd,
   GroupAdd,
   AccountBalance,
-  Receipt,
-  CalendarToday,
-  BarChart,
   AdminPanelSettings,
 } from '@mui/icons-material';
 
@@ -65,30 +62,10 @@ const navigationItems: NavigationItem[] = [
     icon: <People />,
     roles: ['super_admin', 'admin'],
     children: [
-      {
-        id: 'all-users',
-        label: 'All Users',
-        icon: <People />,
-        path: '/users',
-      },
-      {
-        id: 'students',
-        label: 'Students',
-        icon: <School />,
-        path: '/students',
-      },
-      {
-        id: 'add-user',
-        label: 'Add User',
-        icon: <PersonAdd />,
-        path: '/users/add',
-      },
-      {
-        id: 'bulk-import',
-        label: 'Bulk Import',
-        icon: <GroupAdd />,
-        path: '/users/import',
-      },
+      { id: 'all-users', label: 'All Users', icon: <People />, path: '/users' },
+      { id: 'students', label: 'Students', icon: <School />, path: '/students' },
+      { id: 'add-user', label: 'Add User', icon: <PersonAdd />, path: '/users/add' },
+      { id: 'bulk-import', label: 'Bulk Import', icon: <GroupAdd />, path: '/users/import' },
     ],
   },
   {
@@ -96,24 +73,9 @@ const navigationItems: NavigationItem[] = [
     label: 'Academic Management',
     icon: <MenuBook />,
     children: [
-      {
-        id: 'courses',
-        label: 'Courses',
-        icon: <MenuBook />,
-        path: '/courses',
-      },
-      {
-        id: 'grades',
-        label: 'Grades',
-        icon: <Grade />,
-        path: '/grades',
-      },
-      {
-        id: 'enrollments',
-        label: 'Enrollments',
-        icon: <Assignment />,
-        path: '/enrollments',
-      },
+      { id: 'courses', label: 'Courses', icon: <MenuBook />, path: '/courses' },
+      { id: 'grades', label: 'Grades', icon: <Grade />, path: '/grades' },
+      { id: 'enrollments', label: 'Enrollments', icon: <Assignment />, path: '/enrollments' },
     ],
   },
   {
@@ -121,25 +83,9 @@ const navigationItems: NavigationItem[] = [
     label: 'Administrative',
     icon: <AdminPanelSettings />,
     children: [
-      {
-        id: 'payments',
-        label: 'Payments',
-        icon: <Payment />,
-        path: '/payments',
-        badge: '12',
-      },
-      {
-        id: 'attendance',
-        label: 'Attendance',
-        icon: <EventNote />,
-        path: '/attendance',
-      },
-      {
-        id: 'financial',
-        label: 'Financial Reports',
-        icon: <AccountBalance />,
-        path: '/reports/financial',
-      },
+      { id: 'payments', label: 'Payments', icon: <Payment />, path: '/payments', badge: '12' },
+      { id: 'attendance', label: 'Attendance', icon: <EventNote />, path: '/attendance' },
+      { id: 'financial', label: 'Financial Reports', icon: <AccountBalance />, path: '/reports/financial' },
     ],
   },
   {
@@ -162,7 +108,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed = false, onClose }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuthStore();
-  
+
   const [expandedItems, setExpandedItems] = React.useState<string[]>(['users', 'academic', 'administrative']);
 
   const handleItemClick = (item: NavigationItem) => {
@@ -176,114 +122,104 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed = false, onClose }) => {
 
   const toggleExpanded = (itemId: string) => {
     setExpandedItems(prev =>
-      prev.includes(itemId)
-        ? prev.filter(id => id !== itemId)
-        : [...prev, itemId]
+      prev.includes(itemId) ? prev.filter(id => id !== itemId) : [...prev, itemId]
     );
   };
 
-  const isItemActive = (path?: string) => {
-    if (!path) return false;
-    return location.pathname === path || location.pathname.startsWith(path + '/');
-  };
+  const isItemActive = (path?: string) =>
+    path && (location.pathname === path || location.pathname.startsWith(path + '/'));
 
-  const hasPermission = (roles?: string[]) => {
-    if (!roles || roles.length === 0) return true;
-    return user?.role && roles.includes(user.role);
-  };
+  const hasPermission = (roles?: string[]) =>
+    !roles || roles.length === 0 || (user?.role && roles.includes(user.role));
 
   const renderNavigationItem = (item: NavigationItem, level = 0) => {
     if (!hasPermission(item.roles)) return null;
 
     const isActive = isItemActive(item.path);
     const isExpanded = expandedItems.includes(item.id);
-    const hasChildren = item.children && item.children.length > 0;
+    const hasChildren = item.children?.length;
 
-    const listItem = (
-      <ListItem key={item.id} disablePadding sx={{ display: 'block' }}>
-        <ListItemButton
-          onClick={() => handleItemClick(item)}
-          sx={{
-            minHeight: 48,
-            justifyContent: collapsed ? 'center' : 'initial',
-            px: 2.5,
-            py: 1,
-            mx: 1,
-            my: 0.5,
-            borderRadius: 2,
-            backgroundColor: isActive ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
-            '&:hover': {
-              backgroundColor: 'rgba(255, 255, 255, 0.1)',
-            },
-            pl: level > 0 ? 4 : 2.5,
-          }}
-        >
-          <ListItemIcon
+    return (
+      <React.Fragment key={item.id}>
+        <ListItem disablePadding sx={{ display: 'block' }}>
+          <ListItemButton
+            onClick={() => handleItemClick(item)}
             sx={{
-              minWidth: 0,
-              mr: collapsed ? 0 : 3,
-              justifyContent: 'center',
-              color: 'inherit',
+              minHeight: 48,
+              justifyContent: collapsed ? 'center' : 'initial',
+              px: 2.5,
+              py: 1,
+              mx: 1,
+              my: 0.5,
+              borderRadius: 2,
+              backgroundColor: isActive ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
+              '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.1)' },
+              pl: level > 0 ? 4 : 2.5,
             }}
           >
-            {collapsed ? (
-              <Tooltip title={item.label} placement="right">
-                <Box>{item.icon}</Box>
-              </Tooltip>
-            ) : (
-              item.icon
-            )}
-          </ListItemIcon>
-          
-          {!collapsed && (
-            <>
-              <ListItemText
-                primary={item.label}
-                sx={{
-                  opacity: 1,
-                  '& .MuiListItemText-primary': {
-                    fontSize: level > 0 ? '0.875rem' : '1rem',
-                    fontWeight: isActive ? 600 : 400,
-                  },
-                }}
-              />
-              
-              {item.badge && (
-                <Box
+            <ListItemIcon
+              sx={{
+                minWidth: 0,
+                mr: collapsed ? 0 : 3,
+                justifyContent: 'center',
+                color: 'inherit',
+              }}
+            >
+              {collapsed ? (
+                <Tooltip title={item.label} placement="right">
+                  <Box>{item.icon}</Box>
+                </Tooltip>
+              ) : (
+                item.icon
+              )}
+            </ListItemIcon>
+
+            {!collapsed && (
+              <>
+                <ListItemText
+                  primary={item.label}
                   sx={{
-                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                    color: 'white',
-                    borderRadius: '12px',
-                    px: 1,
-                    py: 0.25,
-                    fontSize: '0.75rem',
-                    fontWeight: 'bold',
-                    minWidth: '20px',
-                    textAlign: 'center',
+                    opacity: 1,
+                    '& .MuiListItemText-primary': {
+                      fontSize: level > 0 ? '0.875rem' : '1rem',
+                      fontWeight: isActive ? 600 : 400,
+                    },
                   }}
-                >
-                  {item.badge}
-                </Box>
-              )}
-              
-              {hasChildren && (
-                isExpanded ? <ExpandLess /> : <ExpandMore />
-              )}
-            </>
-          )}
-        </ListItemButton>
-        
+                />
+
+                {item.badge && (
+                  <Box
+                    sx={{
+                      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                      color: 'white',
+                      borderRadius: '12px',
+                      px: 1,
+                      py: 0.25,
+                      fontSize: '0.75rem',
+                      fontWeight: 'bold',
+                      minWidth: '20px',
+                      textAlign: 'center',
+                    }}
+                  >
+                    {item.badge}
+                  </Box>
+                )}
+
+                {hasChildren && (isExpanded ? <ExpandLess /> : <ExpandMore />)}
+              </>
+            )}
+          </ListItemButton>
+        </ListItem>
+
         {hasChildren && !collapsed && (
           <Collapse in={isExpanded} timeout="auto" unmountOnExit>
-            <List component="div" disablePadding>
-              {item.children?.map(child => renderNavigationItem(child, level + 1))}
+            <List disablePadding>
+              {item.children!.map(child => renderNavigationItem(child, level + 1))}
             </List>
           </Collapse>
         )}
-      </ListItem>
+      </React.Fragment>
     );
-
-    return listItem;
   };
 
   return (

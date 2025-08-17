@@ -131,18 +131,19 @@ const Sidebar: React.FC<SidebarProps> = ({
                 bgcolor: 'primary.main',
                 fontSize: '1.5rem',
               }}
-              src={user.personalInfo.profilePicture}
+              src={user?.personalInfo?.profilePicture}
             >
-              {user.personalInfo.firstName[0]}{user.personalInfo.lastName[0]}
+              {user?.personalInfo?.firstName?.[0] ?? ''}
+              {user?.personalInfo?.lastName?.[0] ?? ''}
             </Avatar>
             <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-              {user.personalInfo.firstName} {user.personalInfo.lastName}
+              {user?.personalInfo?.firstName ?? ''} {user?.personalInfo?.lastName ?? ''}
             </Typography>
             <Typography variant="body2" color="text.secondary" gutterBottom>
-              {user.academicInfo.studentId}
+              {user?.academicInfo?.studentId ?? ''}
             </Typography>
             <Chip
-              label={user.academicInfo.program}
+              label={user?.academicInfo?.program ?? ''}
               size="small"
               color="primary"
               variant="outlined"
@@ -248,8 +249,10 @@ const Sidebar: React.FC<SidebarProps> = ({
         </List>
       </Box>
 
+      <Divider />
+
       {/* Academic Info */}
-      {user && (
+      {user ? (
         <Box sx={{ p: 2, bgcolor: 'background.paper', m: 2, borderRadius: 2 }}>
           <Typography variant="caption" color="text.secondary" gutterBottom display="block">
             Academic Progress
@@ -257,21 +260,30 @@ const Sidebar: React.FC<SidebarProps> = ({
           <Box display="flex" justifyContent="space-between" mb={1}>
             <Typography variant="body2">GPA</Typography>
             <Typography variant="body2" fontWeight="bold" color="primary">
-              {user.academicInfo.gpa.toFixed(2)}
+              {user?.academicInfo?.gpa ? user.academicInfo.gpa.toFixed(2) : ''}
             </Typography>
           </Box>
           <Box display="flex" justifyContent="space-between" mb={1}>
             <Typography variant="body2">Credits</Typography>
             <Typography variant="body2" fontWeight="bold">
-              {user.academicInfo.completedCredits}/{user.academicInfo.totalCredits}
+              {user?.academicInfo?.completedCredits ?? ''}/{user?.academicInfo?.totalCredits ?? ''}
             </Typography>
           </Box>
           <Box display="flex" justifyContent="space-between">
             <Typography variant="body2">Level</Typography>
             <Typography variant="body2" fontWeight="bold">
-              {user.academicInfo.level}
+              {user?.academicInfo?.level ?? ''}
             </Typography>
           </Box>
+        </Box>
+      ) : (
+        <Box sx={{ p: 2, bgcolor: 'background.paper', m: 2, borderRadius: 2 }}>
+          <Typography variant="caption" color="text.secondary" gutterBottom display="block">
+            Academic Progress
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            No academic information available.
+          </Typography>
         </Box>
       )}
     </Box>
