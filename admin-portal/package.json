@@ -33,7 +33,7 @@
     "react-hot-toast": "^2.4.1",
     "react-query": "^3.39.3",
     "react-router-dom": "^6.20.1",
-  // ...existing code...
+    
     "recharts": "^2.8.0",
     "typescript": "^4.9.5",
     "university-record-management-system": "file:..",
