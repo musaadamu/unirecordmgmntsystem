@@ -39,57 +39,45 @@ const RealTimeStats: React.FC<RealTimeStatsProps> = ({
   refreshInterval = 30000, // 30 seconds
   showConnectionStatus = true,
 }) => {
-  const [data, setData] = useState<RealTimeData>({
-    activeUsers: 0,
-    onlineStudents: 0,
-    onlineStaff: 0,
-    systemLoad: 0,
-    responseTime: 0,
-    errorRate: 0,
-    lastUpdated: new Date().toISOString(),
-  });
-  
+
+  const [data, setData] = useState<RealTimeData | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Simulate real-time data updates
+  const fetchSystemHealth = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      // Import dashboardService dynamically to avoid circular deps
+      const dashboardService = await import('../../services/dashboardService');
+      const health = await dashboardService.default.getSystemHealth();
+      setData({
+        activeUsers: health.activeConnections ?? 0,
+        onlineStudents: health.activeConnections ?? 0,
+        onlineStaff: 0,
+        systemLoad: health.cpuUsage ?? 0,
+        responseTime: health.responseTime ?? 0,
+        errorRate: health.status === 'healthy' ? 0 : health.status === 'warning' ? 2 : 5,
+        lastUpdated: new Date().toISOString(),
+      });
+      setIsConnected(health.databaseStatus === 'connected');
+    } catch (err: any) {
+      setError('Failed to fetch system health');
+      setIsConnected(false);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const generateMockData = (): RealTimeData => ({
-      activeUsers: Math.floor(Math.random() * 500) + 200,
-      onlineStudents: Math.floor(Math.random() * 400) + 150,
-      onlineStaff: Math.floor(Math.random() * 50) + 20,
-      systemLoad: Math.random() * 100,
-      responseTime: Math.random() * 500 + 100,
-      errorRate: Math.random() * 5,
-      lastUpdated: new Date().toISOString(),
-    });
-
-    // Initial data
-    setData(generateMockData());
-    setIsConnected(true);
-
-    // Set up interval for updates
-    const interval = setInterval(() => {
-      setData(generateMockData());
-    }, refreshInterval);
-
+    fetchSystemHealth();
+    const interval = setInterval(fetchSystemHealth, refreshInterval);
     return () => clearInterval(interval);
   }, [refreshInterval]);
 
   const handleManualRefresh = () => {
-    setIsLoading(true);
-    setTimeout(() => {
-      setData({
-        activeUsers: Math.floor(Math.random() * 500) + 200,
-        onlineStudents: Math.floor(Math.random() * 400) + 150,
-        onlineStaff: Math.floor(Math.random() * 50) + 20,
-        systemLoad: Math.random() * 100,
-        responseTime: Math.random() * 500 + 100,
-        errorRate: Math.random() * 5,
-        lastUpdated: new Date().toISOString(),
-      });
-      setIsLoading(false);
-    }, 1000);
+    fetchSystemHealth();
   };
 
   const getStatusColor = (value: number, thresholds: { good: number; warning: number }) => {
@@ -115,7 +103,6 @@ const RealTimeStats: React.FC<RealTimeStatsProps> = ({
           <Typography variant="h6" fontWeight="bold">
             Real-Time System Status
           </Typography>
-          
           <Box display="flex" alignItems="center" gap={1}>
             {showConnectionStatus && (
               <Tooltip title={isConnected ? 'Connected' : 'Disconnected'}>
@@ -128,7 +115,6 @@ const RealTimeStats: React.FC<RealTimeStatsProps> = ({
                 />
               </Tooltip>
             )}
-            
             <Tooltip title="Refresh">
               <IconButton onClick={handleManualRefresh} disabled={isLoading}>
                 <Refresh />
@@ -136,164 +122,100 @@ const RealTimeStats: React.FC<RealTimeStatsProps> = ({
             </Tooltip>
           </Box>
         </Box>
-
-        <Grid container spacing={3}>
-          {/* Active Users */}
-          <Grid item xs={12} sm={6} md={3}>
-            <Box textAlign="center">
-              <Avatar
-                sx={{
-                  backgroundColor: '#1976d2',
-                  width: 48,
-                  height: 48,
-                  mx: 'auto',
-                  mb: 1,
-                }}
-              >
-                <Circle />
-              </Avatar>
-              <Typography variant="h4" fontWeight="bold" color="primary">
-                {data.activeUsers}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Active Users
-              </Typography>
-            </Box>
-          </Grid>
-
-          {/* Online Students */}
-          <Grid item xs={12} sm={6} md={3}>
-            <Box textAlign="center">
-              <Avatar
-                sx={{
-                  backgroundColor: '#2e7d32',
-                  width: 48,
-                  height: 48,
-                  mx: 'auto',
-                  mb: 1,
-                }}
-              >
-                <Circle />
-              </Avatar>
-              <Typography variant="h4" fontWeight="bold" sx={{ color: '#2e7d32' }}>
-                {data.onlineStudents}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Online Students
-              </Typography>
-            </Box>
-          </Grid>
-
-          {/* Online Staff */}
-          <Grid item xs={12} sm={6} md={3}>
-            <Box textAlign="center">
-              <Avatar
-                sx={{
-                  backgroundColor: '#ed6c02',
-                  width: 48,
-                  height: 48,
-                  mx: 'auto',
-                  mb: 1,
-                }}
-              >
-                <Circle />
-              </Avatar>
-              <Typography variant="h4" fontWeight="bold" sx={{ color: '#ed6c02' }}>
-                {data.onlineStaff}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Online Staff
-              </Typography>
-            </Box>
-          </Grid>
-
-          {/* System Health */}
-          <Grid item xs={12} sm={6} md={3}>
-            <Box textAlign="center">
-              <Avatar
-                sx={{
-                  backgroundColor: getStatusColor(data.systemLoad, { good: 50, warning: 80 }),
-                  width: 48,
-                  height: 48,
-                  mx: 'auto',
-                  mb: 1,
-                }}
-              >
-                <Circle />
-              </Avatar>
-              <Typography
-                variant="h4"
-                fontWeight="bold"
-                sx={{ color: getStatusColor(data.systemLoad, { good: 50, warning: 80 }) }}
-              >
-                {data.systemLoad.toFixed(0)}%
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                System Load
-              </Typography>
-            </Box>
-          </Grid>
-        </Grid>
-
-        {/* Performance Metrics */}
-        <Box mt={4}>
-          <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-            Performance Metrics
-          </Typography>
-          
-          <Grid container spacing={2}>
-            <Grid item xs={12} md={6}>
-              <Box mb={2}>
-                <Box display="flex" justifyContent="space-between" mb={1}>
-                  <Typography variant="body2">Response Time</Typography>
-                  <Typography variant="body2" fontWeight="bold">
-                    {data.responseTime.toFixed(0)}ms
-                  </Typography>
-                </Box>
-                <LinearProgress
-                  variant="determinate"
-                  value={Math.min((data.responseTime / 1000) * 100, 100)}
+        {isLoading && <LinearProgress sx={{ mb: 2 }} />}
+        {error && (
+          <Box mb={2}>
+            <Typography color="error">{error}</Typography>
+          </Box>
+        )}
+        {!isLoading && !error && data && (
+          <Grid container spacing={3}>
+            <Grid item xs={12} sm={6} md={3}>
+              <Box textAlign="center">
+                <Avatar
                   sx={{
-                    height: 6,
-                    borderRadius: 3,
-                    '& .MuiLinearProgress-bar': {
-                      backgroundColor: getStatusColor(data.responseTime, { good: 200, warning: 500 }),
-                    },
+                    backgroundColor: '#1976d2',
+                    width: 48,
+                    height: 48,
+                    mx: 'auto',
+                    mb: 1,
                   }}
-                />
+                >
+                  <Circle />
+                </Avatar>
+                <Typography variant="h4" fontWeight="bold" color="primary">
+                  {data.activeUsers}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Active Users
+                </Typography>
               </Box>
             </Grid>
-
-            <Grid item xs={12} md={6}>
-              <Box mb={2}>
-                <Box display="flex" justifyContent="space-between" mb={1}>
-                  <Typography variant="body2">Error Rate</Typography>
-                  <Typography variant="body2" fontWeight="bold">
-                    {data.errorRate.toFixed(2)}%
-                  </Typography>
-                </Box>
-                <LinearProgress
-                  variant="determinate"
-                  value={Math.min(data.errorRate * 20, 100)}
+            <Grid item xs={12} sm={6} md={3}>
+              <Box textAlign="center">
+                <Avatar
                   sx={{
-                    height: 6,
-                    borderRadius: 3,
-                    '& .MuiLinearProgress-bar': {
-                      backgroundColor: getStatusColor(data.errorRate, { good: 1, warning: 3 }),
-                    },
+                    backgroundColor: '#2e7d32',
+                    width: 48,
+                    height: 48,
+                    mx: 'auto',
+                    mb: 1,
                   }}
-                />
+                >
+                  <Circle />
+                </Avatar>
+                <Typography variant="h4" fontWeight="bold" sx={{ color: '#2e7d32' }}>
+                  {data.onlineStudents}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Online Students
+                </Typography>
+              </Box>
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <Box textAlign="center">
+                <Avatar
+                  sx={{
+                    backgroundColor: '#ed6c02',
+                    width: 48,
+                    height: 48,
+                    mx: 'auto',
+                    mb: 1,
+                  }}
+                >
+                  <Circle />
+                </Avatar>
+                <Typography variant="h4" fontWeight="bold" sx={{ color: '#ed6c02' }}>
+                  {data.onlineStaff}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Online Staff
+                </Typography>
+              </Box>
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <Box textAlign="center">
+                <Avatar
+                  sx={{
+                    backgroundColor: '#d32f2f',
+                    width: 48,
+                    height: 48,
+                    mx: 'auto',
+                    mb: 1,
+                  }}
+                >
+                  <TrendingUp />
+                </Avatar>
+                <Typography variant="h4" fontWeight="bold" sx={{ color: '#d32f2f' }}>
+                  {data.systemLoad.toFixed(0)}%
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  System Load
+                </Typography>
               </Box>
             </Grid>
           </Grid>
-        </Box>
-
-        {/* Last Updated */}
-        <Box mt={2} textAlign="center">
-          <Typography variant="caption" color="text.secondary">
-            Last updated: {formatLastUpdated(data.lastUpdated)}
-          </Typography>
-        </Box>
+        )}
       </CardContent>
     </Card>
   );

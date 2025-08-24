@@ -22,6 +22,7 @@ import {
   MenuItem,
   InputLabel,
   Divider,
+  Alert,
 } from '@mui/material';
 import {
   People,
@@ -76,186 +77,65 @@ const DashboardPage: React.FC = () => {
   const [timePeriod, setTimePeriod] = useState<'month' | 'quarter' | 'year'>('month');
   const [refreshKey, setRefreshKey] = useState(0);
 
-  // Mock data that will be used as fallbacks
-  const mockStats = [
-    {
-      title: 'Total Students',
-      value: '2,847',
-      change: '+12%',
-      trend: 'up' as const,
-      icon: <School />,
-      color: '#1976d2',
-      subtitle: 'Active enrollments',
-    },
-    {
-      title: 'Active Courses',
-      value: '156',
-      change: '+3%',
-      trend: 'up' as const,
-      icon: <MenuBook />,
-      color: '#2e7d32',
-      subtitle: 'This semester',
-    },
-    {
-      title: 'Total Revenue',
-      value: '$1.2M',
-      change: '+8%',
-      trend: 'up' as const,
-      icon: <AttachMoney />,
-      color: '#ed6c02',
-      subtitle: 'This academic year',
-    },
-    {
-      title: 'Pending Payments',
-      value: '89',
-      change: '-5%',
-      trend: 'down' as const,
-      icon: <Payment />,
-      color: '#d32f2f',
-      subtitle: 'Requires attention',
-    },
-  ];
-
-  const mockEnrollmentTrends = [
-    { period: 'Jan', enrollments: 120, completions: 95, revenue: 45000 },
-    { period: 'Feb', enrollments: 135, completions: 110, revenue: 52000 },
-    { period: 'Mar', enrollments: 150, completions: 125, revenue: 58000 },
-    { period: 'Apr', enrollments: 145, completions: 130, revenue: 55000 },
-    { period: 'May', enrollments: 160, completions: 140, revenue: 62000 },
-    { period: 'Jun', enrollments: 175, completions: 155, revenue: 68000 },
-  ];
-
-  const mockDepartmentStats = [
-    { department: 'Computer Science', students: 450, revenue: 180000, averageGpa: 3.4 },
-    { department: 'Engineering', students: 380, revenue: 152000, averageGpa: 3.2 },
-    { department: 'Business', students: 320, revenue: 128000, averageGpa: 3.6 },
-    { department: 'Medicine', students: 280, revenue: 140000, averageGpa: 3.8 },
-    { department: 'Arts', students: 250, revenue: 100000, averageGpa: 3.5 },
-  ];
-
-  const mockActivities = [
-    {
-      id: '1',
-      type: 'enrollment' as const,
-      title: 'New Student Enrollment',
-      description: 'John Doe enrolled in Computer Science program',
-      user: { name: 'John Doe', role: 'Student' },
-      timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-    },
-    {
-      id: '2',
-      type: 'payment' as const,
-      title: 'Payment Received',
-      description: 'Tuition payment of $2,500 from Jane Smith',
-      user: { name: 'Jane Smith', role: 'Student' },
-      timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
-    },
-    {
-      id: '3',
-      type: 'grade' as const,
-      title: 'Grades Posted',
-      description: 'Final grades posted for MATH101',
-      user: { name: 'Dr. Johnson', role: 'Professor' },
-      timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
-    },
-  ];
-
-  const mockGradeDistribution = [
-    { name: 'A', value: 25, color: '#2e7d32' },
-    { name: 'B', value: 35, color: '#1976d2' },
-    { name: 'C', value: 25, color: '#ed6c02' },
-    { name: 'D', value: 10, color: '#f57c00' },
-    { name: 'F', value: 5, color: '#d32f2f' },
-  ];
-
-  const mockUsersByRole = [
-    { name: 'Students', value: 2847, color: '#1976d2' },
-    { name: 'Academic Staff', value: 156, color: '#2e7d32' },
-    { name: 'Support Staff', value: 89, color: '#ed6c02' },
-    { name: 'Administrators', value: 12, color: '#9c27b0' },
-  ];
 
   // Fixed React Query hooks - always return valid data, never undefined
-  const { data: overview, isLoading: overviewLoading, refetch: refetchOverview } = useQuery({
+  const { data: overview, isLoading: overviewLoading, refetch: refetchOverview, error: dashboardError } = useQuery({
     queryKey: ['dashboard-overview', refreshKey],
     queryFn: async () => {
-      const result = await dashboardService.getDashboardOverview();
-      // Always return a valid object, never undefined
-      return result || {
-        totalStudents: 0,
-        totalCourses: 0,
-        totalRevenue: 0,
-        pendingPayments: 0
-      };
+      return await dashboardService.getDashboardOverview();
     },
     staleTime: 5 * 60 * 1000,
-    // Provide initial data to prevent undefined
-    initialData: {
-      totalStudents: 0,
-      totalCourses: 0,
-      totalRevenue: 0,
-      pendingPayments: 0
-    }
   });
 
   const { data: enrollmentTrends, isLoading: trendsLoading } = useQuery({
     queryKey: ['enrollment-trends', timePeriod, refreshKey],
     queryFn: async () => {
-      const result = await dashboardService.getEnrollmentTrends(timePeriod);
-      return result || mockEnrollmentTrends;
+      return await dashboardService.getEnrollmentTrends(timePeriod);
     },
     staleTime: 5 * 60 * 1000,
-    initialData: mockEnrollmentTrends
   });
 
   const { data: departmentStats, isLoading: departmentLoading } = useQuery({
     queryKey: ['department-stats', refreshKey],
     queryFn: async () => {
-      const result = await dashboardService.getDepartmentStats();
-      return result || mockDepartmentStats;
+      return await dashboardService.getDepartmentStats();
     },
     staleTime: 5 * 60 * 1000,
-    initialData: mockDepartmentStats
   });
 
   const { data: recentActivities, isLoading: activitiesLoading, refetch: refetchActivities } = useQuery({
     queryKey: ['recent-activities', refreshKey],
     queryFn: async () => {
-      const result = await dashboardService.getRecentActivities(10);
-      return result || mockActivities;
+      return await dashboardService.getRecentActivities(10);
     },
     staleTime: 2 * 60 * 1000,
-    initialData: mockActivities
   });
 
   const { data: paymentAnalytics, isLoading: paymentLoading } = useQuery({
     queryKey: ['payment-analytics', timePeriod, refreshKey],
     queryFn: async () => {
-      const result = await dashboardService.getPaymentAnalytics(timePeriod);
-      return result || { paid: 85, pending: 12, overdue: 3 };
+      return await dashboardService.getPaymentAnalytics(timePeriod);
     },
     staleTime: 5 * 60 * 1000,
-    initialData: { paid: 85, pending: 12, overdue: 3 }
   });
 
   const { data: academicAnalytics, isLoading: academicLoading } = useQuery({
     queryKey: ['academic-analytics', refreshKey],
     queryFn: async () => {
-      const result = await dashboardService.getAcademicAnalytics();
-      return result || mockGradeDistribution;
+      return await dashboardService.getAcademicAnalytics();
     },
     staleTime: 5 * 60 * 1000,
-    initialData: mockGradeDistribution
   });
 
   const { data: userAnalytics, isLoading: userLoading } = useQuery({
     queryKey: ['user-analytics', timePeriod, refreshKey],
     queryFn: async () => {
-      const result = await dashboardService.getUserAnalytics(timePeriod);
-      return result || mockUsersByRole;
+  // Only pass 'week', 'month', or 'quarter' (not 'year')
+  const validPeriods = ['week', 'month', 'quarter'];
+  const safePeriod = validPeriods.includes(timePeriod) ? timePeriod : 'month';
+  return await dashboardService.getUserAnalytics(safePeriod as 'week' | 'month' | 'quarter');
     },
     staleTime: 5 * 60 * 1000,
-    initialData: mockUsersByRole
   });
 
   const handleRefresh = () => {
@@ -277,44 +157,49 @@ const DashboardPage: React.FC = () => {
   };
 
   // Generate stats from overview data with fallbacks
-  const stats = [
-    {
-      title: 'Total Students',
-      value: overview?.totalStudents ? overview.totalStudents.toLocaleString() : '2,847',
-      change: '+12%',
-      trend: 'up' as const,
-      icon: <School />,
-      color: '#1976d2',
-      subtitle: 'Active enrollments',
-    },
-    {
-      title: 'Active Courses',
-      value: overview?.totalCourses ? overview.totalCourses.toString() : '156',
-      change: '+3%',
-      trend: 'up' as const,
-      icon: <MenuBook />,
-      color: '#2e7d32',
-      subtitle: 'This semester',
-    },
-    {
-      title: 'Total Revenue',
-      value: overview?.totalRevenue ? `$${(overview.totalRevenue / 1000000).toFixed(1)}M` : '$1.2M',
-      change: '+8%',
-      trend: 'up' as const,
-      icon: <AttachMoney />,
-      color: '#ed6c02',
-      subtitle: 'This academic year',
-    },
-    {
-      title: 'Pending Payments',
-      value: overview?.pendingPayments ? overview.pendingPayments.toString() : '89',
-      change: '-5%',
-      trend: 'down' as const,
-      icon: <Payment />,
-      color: '#d32f2f',
-      subtitle: 'Requires attention',
-    },
-  ];
+  const stats = overview
+    ? [
+        {
+          title: 'Total Students',
+          value: overview.totalStudents?.toLocaleString() ?? 'N/A',
+          change: '',
+          trend: 'neutral' as const,
+          icon: <School />,
+          color: '#1976d2',
+          subtitle: 'Active enrollments',
+        },
+        {
+          title: 'Active Courses',
+          value: overview.totalCourses?.toString() ?? 'N/A',
+          change: '',
+          trend: 'neutral' as const,
+          icon: <MenuBook />,
+          color: '#2e7d32',
+          subtitle: 'This semester',
+        },
+        {
+          title: 'Total Revenue',
+          value:
+            overview.totalRevenue !== undefined
+              ? `$${(overview.totalRevenue / 1000000).toFixed(1)}M`
+              : 'N/A',
+          change: '',
+          trend: 'neutral' as const,
+          icon: <AttachMoney />,
+          color: '#ed6c02',
+          subtitle: 'This academic year',
+        },
+        {
+          title: 'Pending Payments',
+          value: overview.pendingPayments?.toString() ?? 'N/A',
+          change: '',
+          trend: 'neutral' as const,
+          icon: <Payment />,
+          color: '#d32f2f',
+          subtitle: 'Requires attention',
+        },
+      ]
+    : [];
 
   return (
     <Box>
@@ -364,12 +249,19 @@ const DashboardPage: React.FC = () => {
         </Box>
       </Box>
 
+      {/* Error Alert */}
+      {dashboardError && ((dashboardError as any)?.response?.status === 401 || (dashboardError as any)?.response?.status === 403) && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          You are not authorized to view dashboard information. Please log in with the correct account or contact your administrator.
+        </Alert>
+      )}
+
       {/* Stats Cards */}
       <Grid container spacing={3} mb={4}>
         {overviewLoading ? (
           Array.from({ length: 4 }).map((_, index) => (
             <Grid item xs={12} sm={6} md={3} key={index}>
-              <StatCard loading />
+              <StatCard title="" value={0} icon={<School />} color="#1976d2" loading />
             </Grid>
           ))
         ) : (
@@ -412,7 +304,7 @@ const DashboardPage: React.FC = () => {
                 ) : (
                   <LineChart
                     title="Enrollment Trends"
-                    data={enrollmentTrends}
+                    data={enrollmentTrends || []}
                     height={350}
                     xAxisKey="period"
                     lines={[
@@ -429,7 +321,7 @@ const DashboardPage: React.FC = () => {
           {/* Recent Activities */}
           <Grid item xs={12} lg={4}>
             <ActivityFeed
-              activities={recentActivities}
+              activities={recentActivities || []}
               loading={activitiesLoading}
               onRefresh={refetchActivities}
               maxItems={8}
@@ -445,7 +337,7 @@ const DashboardPage: React.FC = () => {
                 ) : (
                   <BarChart
                     title="Department Performance"
-                    data={departmentStats}
+                    data={departmentStats || []}
                     height={300}
                     xAxisKey="department"
                     bars={[
@@ -467,7 +359,7 @@ const DashboardPage: React.FC = () => {
                 ) : (
                   <BarChart
                     title="Revenue by Department"
-                    data={departmentStats}
+                    data={departmentStats || []}
                     height={300}
                     xAxisKey="department"
                     bars={[
@@ -491,7 +383,7 @@ const DashboardPage: React.FC = () => {
               <CardContent>
                 <PieChart
                   title="Grade Distribution"
-                  data={mockGradeDistribution}
+                  data={(academicAnalytics?.gradeDistribution || []).map(gd => ({ name: gd.grade, value: gd.count }))}
                   height={350}
                   showLegend={true}
                 />
@@ -508,7 +400,7 @@ const DashboardPage: React.FC = () => {
                 ) : (
                   <BarChart
                     title="Average GPA by Department"
-                    data={departmentStats}
+                    data={departmentStats || []}
                     height={350}
                     xAxisKey="department"
                     bars={[
@@ -530,7 +422,7 @@ const DashboardPage: React.FC = () => {
                 ) : (
                   <LineChart
                     title="Course Enrollment vs Completion Trends"
-                    data={enrollmentTrends}
+                    data={enrollmentTrends || []}
                     height={300}
                     xAxisKey="period"
                     lines={[
@@ -557,7 +449,7 @@ const DashboardPage: React.FC = () => {
                 ) : (
                   <LineChart
                     title="Revenue Trends"
-                    data={enrollmentTrends}
+                    data={enrollmentTrends || []}
                     height={350}
                     xAxisKey="period"
                     lines={[
@@ -582,12 +474,12 @@ const DashboardPage: React.FC = () => {
                     <Box display="flex" justifyContent="space-between" mb={1}>
                       <Typography variant="body2">Paid</Typography>
                       <Typography variant="body2" fontWeight="bold">
-                        {paymentAnalytics?.paid || 85}%
+                        {paymentAnalytics?.monthlyRevenue || 85}%
                       </Typography>
                     </Box>
                     <LinearProgress
                       variant="determinate"
-                      value={paymentAnalytics?.paid || 85}
+                      value={paymentAnalytics?.monthlyRevenue || 85}
                       sx={{
                         height: 8,
                         borderRadius: 4,
@@ -599,12 +491,12 @@ const DashboardPage: React.FC = () => {
                     <Box display="flex" justifyContent="space-between" mb={1}>
                       <Typography variant="body2">Pending</Typography>
                       <Typography variant="body2" fontWeight="bold">
-                        {paymentAnalytics?.pending || 12}%
+                        {paymentAnalytics?.pendingAmount || 12}%
                       </Typography>
                     </Box>
                     <LinearProgress
                       variant="determinate"
-                      value={paymentAnalytics?.pending || 12}
+                      value={paymentAnalytics?.pendingAmount || 12}
                       sx={{
                         height: 8,
                         borderRadius: 4,
@@ -616,12 +508,12 @@ const DashboardPage: React.FC = () => {
                     <Box display="flex" justifyContent="space-between" mb={1}>
                       <Typography variant="body2">Overdue</Typography>
                       <Typography variant="body2" fontWeight="bold">
-                        {paymentAnalytics?.overdue || 3}%
+                        {paymentAnalytics?.overdueAmount || 3}%
                       </Typography>
                     </Box>
                     <LinearProgress
                       variant="determinate"
-                      value={paymentAnalytics?.overdue || 3}
+                      value={paymentAnalytics?.overdueAmount || 3}
                       sx={{
                         height: 8,
                         borderRadius: 4,
@@ -645,7 +537,7 @@ const DashboardPage: React.FC = () => {
               <CardContent>
                 <PieChart
                   title="Users by Role"
-                  data={userAnalytics}
+                  data={userAnalytics?.usersByRole?.map(u => ({ name: u.role, value: u.count })) || []}
                   height={350}
                   showLegend={true}
                 />

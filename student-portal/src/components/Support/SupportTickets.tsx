@@ -60,125 +60,27 @@ const SupportTickets: React.FC = () => {
     priority: 'medium',
     attachments: [] as File[],
   });
-  const [newMessage, setNewMessage] = useState('');
-  const [messageAttachments, setMessageAttachments] = useState<File[]>([]);
-  const [filterStatus, setFilterStatus] = useState('all');
-  const [filterCategory, setFilterCategory] = useState('all');
+  // Real tickets data
+  const [tickets, setTickets] = useState<SupportTicket[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Mock tickets data
-  const mockTickets: SupportTicket[] = [
-    {
-      _id: '1',
-      student: 'student1',
-      title: 'Unable to access course materials',
-      description: 'I cannot access the course materials for CS301. The page shows an error when I try to download PDFs.',
-      category: 'technical',
-      priority: 'high',
-      status: 'in_progress',
-      assignedTo: {
-        _id: 'staff1',
-        name: 'John Smith',
-        email: 'john.smith@university.edu',
-        department: 'IT Support',
-        role: 'Technical Support Specialist',
-      },
-      attachments: [],
-      messages: [
-        {
-          _id: 'msg1',
-          sender: {
-            _id: 'student1',
-            name: 'Student User',
-            role: 'student',
-          },
-          message: 'I cannot access the course materials for CS301. The page shows an error when I try to download PDFs.',
-          timestamp: '2024-01-15T10:00:00Z',
-        },
-        {
-          _id: 'msg2',
-          sender: {
-            _id: 'staff1',
-            name: 'John Smith',
-            role: 'staff',
-          },
-          message: 'Thank you for reporting this issue. I\'m looking into the problem with the course materials. Can you please tell me which browser you\'re using?',
-          timestamp: '2024-01-15T11:30:00Z',
-        },
-      ],
-      tags: ['course-materials', 'download-error'],
-      createdAt: '2024-01-15T10:00:00Z',
-      updatedAt: '2024-01-15T11:30:00Z',
-    },
-    {
-      _id: '2',
-      student: 'student1',
-      title: 'Payment confirmation not received',
-      description: 'I made a payment for tuition fees yesterday but haven\'t received any confirmation email.',
-      category: 'financial',
-      priority: 'medium',
-      status: 'resolved',
-      assignedTo: {
-        _id: 'staff2',
-        name: 'Sarah Johnson',
-        email: 'sarah.johnson@university.edu',
-        department: 'Finance',
-        role: 'Finance Officer',
-      },
-      attachments: [],
-      messages: [
-        {
-          _id: 'msg3',
-          sender: {
-            _id: 'student1',
-            name: 'Student User',
-            role: 'student',
-          },
-          message: 'I made a payment for tuition fees yesterday but haven\'t received any confirmation email.',
-          timestamp: '2024-01-14T14:00:00Z',
-        },
-        {
-          _id: 'msg4',
-          sender: {
-            _id: 'staff2',
-            name: 'Sarah Johnson',
-            role: 'staff',
-          },
-          message: 'I\'ve checked your payment records and can confirm that your payment was processed successfully. I\'ve resent the confirmation email to your registered email address.',
-          timestamp: '2024-01-14T15:30:00Z',
-        },
-      ],
-      tags: ['payment', 'confirmation'],
-      resolution: {
-        summary: 'Payment confirmation email was resent to student\'s registered email address.',
-        resolvedBy: 'Sarah Johnson',
-        resolvedAt: '2024-01-14T15:30:00Z',
-        satisfaction: 5,
-        feedback: 'Very helpful and quick response!',
-      },
-      createdAt: '2024-01-14T14:00:00Z',
-      updatedAt: '2024-01-14T15:30:00Z',
-    },
-    {
-      _id: '3',
-      student: 'student1',
-      title: 'Request for transcript',
-      description: 'I need an official transcript for my graduate school application. How can I request one?',
-      category: 'administrative',
-      priority: 'low',
-      status: 'open',
-      attachments: [],
-      messages: [
-        {
-          _id: 'msg5',
-          sender: {
-            _id: 'student1',
-            name: 'Student User',
-            role: 'student',
-          },
-          message: 'I need an official transcript for my graduate school application. How can I request one?',
-          timestamp: '2024-01-16T09:00:00Z',
-        },
-      ],
+  React.useEffect(() => {
+    const fetchTickets = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        // You may want to pass filters here
+        const result = await import('@/services/supportService').then(m => m.supportService.getTickets());
+        setTickets(result.tickets);
+      } catch (err: any) {
+        setError(err.message || 'Failed to fetch support tickets');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchTickets();
+  }, []);
       tags: ['transcript', 'official-documents'],
       createdAt: '2024-01-16T09:00:00Z',
       updatedAt: '2024-01-16T09:00:00Z',
@@ -235,7 +137,7 @@ const SupportTickets: React.FC = () => {
   };
 
   const getFilteredTickets = () => {
-    return mockTickets.filter(ticket => {
+    return tickets.filter(ticket => {
       if (filterStatus !== 'all' && ticket.status !== filterStatus) return false;
       if (filterCategory !== 'all' && ticket.category !== filterCategory) return false;
       return true;
@@ -288,6 +190,13 @@ const SupportTickets: React.FC = () => {
   };
 
   const filteredTickets = getFilteredTickets();
+
+  if (loading) {
+    return <Box p={3}><Alert severity="info">Loading support tickets...</Alert></Box>;
+  }
+  if (error) {
+    return <Box p={3}><Alert severity="error">{error}</Alert></Box>;
+  }
 
   return (
     <Box>

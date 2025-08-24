@@ -67,30 +67,13 @@ const PaymentsPage: React.FC = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const { user } = useAuthStore();
 
-  // Mock financial summary data
-  const mockFinancialSummary = {
-    totalFees: 450000,
-    paidAmount: 300000,
-    pendingAmount: 150000,
-    overdueAmount: 0,
-    financialAidTotal: 100000,
-    netAmount: 350000,
-    paymentStatus: 'partial' as const,
-    nextPaymentDue: {
-      amount: 150000,
-      dueDate: '2024-02-15',
-      description: 'Second Semester Tuition',
-    },
-    semester: 'Fall',
-    academicYear: '2024',
-  };
-
-  // Mock query
-  const financialSummaryQuery = {
-    data: mockFinancialSummary,
-    isLoading: false,
-    error: null,
-  };
+  // Real API query for financial summary
+  const financialSummaryQuery = useQuery(['financialSummary', user?.id], () =>
+    paymentsService.getFinancialSummary(user?.id),
+    {
+      enabled: !!user?.id,
+    }
+  );
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);

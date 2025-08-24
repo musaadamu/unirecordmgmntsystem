@@ -4,6 +4,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
+const path = require('path');
 require('dotenv').config();
 
 const app = express();
@@ -53,6 +54,9 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/universit
 .then(() => console.log('MongoDB connected successfully'))
 .catch(err => console.error('MongoDB connection error:', err));
 
+// Swagger API docs
+require('./swagger')(app);
+
 // Routes
 app.get('/', (req, res) => {
   res.json({ 
@@ -75,7 +79,7 @@ app.use('/api/transcripts', require('./routes/transcripts'));
 const dashboardRoutes = require('./routes/dashboard');
 const assignmentsRoutes = require('./routes/assignments');
 
-// app.use('/api/payments', require('./routes/payments'));
+app.use('/api/payments', require('./routes/payments'));
 
 // RBAC Routes
 app.use('/api/admin', require('./routes/rbac'));
@@ -85,6 +89,7 @@ app.use('/api/notifications', require('./routes/notifications'));
 
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/assignments', assignmentsRoutes);
+app.use('/api/course-offerings', require('./routes/courseOfferings'));
 
 // Import error handling middleware
 const { globalErrorHandler, handleNotFound } = require('./middleware/errorHandler');

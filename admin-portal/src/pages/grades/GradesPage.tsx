@@ -25,7 +25,6 @@ import {
   LinearProgress,
 } from '@mui/material';
 import {
-  Grade,
   Assignment,
   Analytics,
   Add,
@@ -36,6 +35,11 @@ import {
   School,
   Star,
 } from '@mui/icons-material';
+import { useQuery } from '@tanstack/react-query';
+import { gradesService } from '@/services/gradesService';
+import type { Grade } from '@/services/gradesService';
+// If you need types, import them like:
+// import type { Grade, GradeStats, GradeDistribution, CoursePerformance } from '@/services/gradesService';
 
 // Components
 import StatCard from '@/components/Dashboard/StatCard';
@@ -64,6 +68,7 @@ function TabPanel(props: TabPanelProps) {
 }
 
 const GradesPage: React.FC = () => {
+
   const [tabValue, setTabValue] = useState(0);
   const [selectedCourse, setSelectedCourse] = useState('');
   const [selectedSemester, setSelectedSemester] = useState('fall_2024');
@@ -72,72 +77,35 @@ const GradesPage: React.FC = () => {
     setTabValue(newValue);
   };
 
-  // Mock data for grades
-  const gradeStats = [
-    {
-      title: 'Total Grades',
-      value: '12,847',
-      change: '+8%',
-      trend: 'up' as const,
-      icon: <Grade />,
-      color: '#1976d2',
-      subtitle: 'All recorded grades',
+  // Real API queries
+  const {
+    data: gradeStats = {
+      totalGrades: 0,
+      averageGPA: 0,
+      pendingGrades: 0,
+      honorStudents: 0,
     },
-    {
-      title: 'Average GPA',
-      value: '3.42',
-      change: '+0.12',
-      trend: 'up' as const,
-      icon: <Star />,
-      color: '#2e7d32',
-      subtitle: 'University average',
-    },
-    {
-      title: 'Pending Grades',
-      value: '156',
-      change: '-23%',
-      trend: 'down' as const,
-      icon: <Assignment />,
-      color: '#ed6c02',
-      subtitle: 'Awaiting submission',
-    },
-    {
-      title: 'Honor Students',
-      value: '284',
-      change: '+15%',
-      trend: 'up' as const,
-      icon: <School />,
-      color: '#9c27b0',
-      subtitle: 'GPA ≥ 3.5',
-    },
-  ];
+    isLoading: statsLoading,
+    error: statsError,
+  } = useQuery({ queryKey: ['gradeStats'], queryFn: gradesService.getStats });
 
-  // Mock grade distribution data
-  const gradeDistribution = [
-    { name: 'A', value: 25, color: '#2e7d32' },
-    { name: 'B', value: 35, color: '#1976d2' },
-    { name: 'C', value: 25, color: '#ed6c02' },
-    { name: 'D', value: 10, color: '#f57c00' },
-    { name: 'F', value: 5, color: '#d32f2f' },
-  ];
+  const {
+    data: gradeDistribution = [],
+    isLoading: distLoading,
+    error: distError,
+  } = useQuery({ queryKey: ['gradeDistribution'], queryFn: gradesService.getDistribution });
 
-  // Mock course performance data
-  const coursePerformance = [
-    { course: 'CS101', averageGrade: 3.4, students: 45, passRate: 92 },
-    { course: 'MATH201', averageGrade: 3.1, students: 38, passRate: 87 },
-    { course: 'ENG102', averageGrade: 3.6, students: 52, passRate: 95 },
-    { course: 'PHYS101', averageGrade: 2.9, students: 41, passRate: 83 },
-    { course: 'CHEM101', averageGrade: 3.2, students: 39, passRate: 89 },
-  ];
+  const {
+    data: coursePerformance = [],
+    isLoading: perfLoading,
+    error: perfError,
+  } = useQuery({ queryKey: ['coursePerformance'], queryFn: gradesService.getCoursePerformance });
 
-  // Mock student grades
-  const studentGrades = [
-    { id: '1', studentId: 'S001', name: 'John Doe', course: 'CS101', assignment: 'Midterm Exam', grade: 'A', points: 95, maxPoints: 100 },
-    { id: '2', studentId: 'S002', name: 'Jane Smith', course: 'CS101', assignment: 'Final Project', grade: 'B+', points: 87, maxPoints: 100 },
-    { id: '3', studentId: 'S003', name: 'Mike Johnson', course: 'MATH201', assignment: 'Quiz 1', grade: 'A-', points: 92, maxPoints: 100 },
-    { id: '4', studentId: 'S004', name: 'Sarah Wilson', course: 'ENG102', assignment: 'Essay 1', grade: 'B', points: 83, maxPoints: 100 },
-    { id: '5', studentId: 'S005', name: 'David Brown', course: 'PHYS101', assignment: 'Lab Report', grade: 'C+', points: 78, maxPoints: 100 },
-  ];
+  const {
+    data: studentGrades = [],
+    isLoading: gradesLoading,
+    error: gradesError,
+  } = useQuery({ queryKey: ['studentGrades'], queryFn: gradesService.getGrades });
 
   const getGradeColor = (grade: string) => {
     if (grade.startsWith('A')) return 'success';
@@ -178,25 +146,48 @@ const GradesPage: React.FC = () => {
 
       {/* Grade Statistics */}
       <Grid container spacing={3} mb={4}>
-        {gradeStats.map((stat, index) => (
-          <Grid item xs={12} sm={6} md={3} key={index}>
-            <StatCard
-              title={stat.title}
-              value={stat.value}
-              change={stat.change}
-              trend={stat.trend}
-              icon={stat.icon}
-              color={stat.color}
-              subtitle={stat.subtitle}
-            />
-          </Grid>
-        ))}
+        <Grid item xs={12} sm={6} md={3}>
+          <StatCard
+            title="Total Grades"
+            value={gradeStats.totalGrades ?? 0}
+            subtitle="All grades recorded"
+            icon={<School />}
+            color="primary"
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <StatCard
+            title="Average GPA"
+            value={gradeStats.averageGPA ?? 0}
+            subtitle="Current average GPA"
+            icon={<Star />}
+            color="success"
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <StatCard
+            title="Pending Grades"
+            value={gradeStats.pendingGrades ?? 0}
+            subtitle="Grades to be entered"
+            icon={<Assignment />}
+            color="warning"
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <StatCard
+            title="Honor Students"
+            value={gradeStats.honorStudents ?? 0}
+            subtitle="Students with honors"
+            icon={<Star />}
+            color="info"
+          />
+        </Grid>
       </Grid>
 
       {/* Tabs */}
       <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
         <Tabs value={tabValue} onChange={handleTabChange} aria-label="grade management tabs">
-          <Tab label="Grade Entry" icon={<Grade />} />
+          <Tab label="Grade Entry" icon={<School />} />
           <Tab label="Course Performance" icon={<Analytics />} />
           <Tab label="Grade Analytics" icon={<TrendingUp />} />
         </Tabs>
@@ -205,6 +196,37 @@ const GradesPage: React.FC = () => {
       {/* Grade Entry Tab */}
       <TabPanel value={tabValue} index={0}>
         <Grid container spacing={3}>
+          {/* Recent Grades Section */}
+          <Grid item xs={12} md={6} lg={4}>
+            <Card sx={{ mb: 3 }}>
+              <CardContent>
+                <Typography variant="h6" fontWeight="bold" gutterBottom>
+                  Recent Grades
+                </Typography>
+                {studentGrades && studentGrades.length > 0 ? (
+                  studentGrades.slice(0, 3).map((grade: Grade) => (
+                    <Box key={grade._id} mb={2}>
+                      <Typography variant="subtitle2" fontWeight="bold">
+                        {grade.course}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {grade.assignment}
+                      </Typography>
+                      <Typography variant="body2">
+                        <Chip label={grade.grade} color={getGradeColor(grade.grade) as any} size="small" />
+                        {grade.points}/{grade.maxPoints} • {grade.date}
+                      </Typography>
+                    </Box>
+                  ))
+                ) : (
+                  <Typography variant="body2" color="text.secondary">
+                    No recent grades available.
+                  </Typography>
+                )}
+              </CardContent>
+            </Card>
+          </Grid>
+
           {/* Filters */}
           <Grid item xs={12}>
             <Card sx={{ mb: 3 }}>
@@ -219,6 +241,7 @@ const GradesPage: React.FC = () => {
                         onChange={(e) => setSelectedCourse(e.target.value)}
                       >
                         <MenuItem value="">All Courses</MenuItem>
+                        {/* ...existing code... */}
                         <MenuItem value="CS101">CS101 - Intro to Computer Science</MenuItem>
                         <MenuItem value="MATH201">MATH201 - Calculus II</MenuItem>
                         <MenuItem value="ENG102">ENG102 - English Composition</MenuItem>
@@ -277,14 +300,14 @@ const GradesPage: React.FC = () => {
                     </TableHead>
                     <TableBody>
                       {studentGrades.map((grade) => (
-                        <TableRow key={grade.id}>
+                        <TableRow key={grade._id}>
                           <TableCell>
                             <Box>
                               <Typography variant="body2" fontWeight="bold">
-                                {grade.name}
+                                {grade.student}
                               </Typography>
                               <Typography variant="caption" color="text.secondary">
-                                {grade.studentId}
+                                {grade.student}
                               </Typography>
                             </Box>
                           </TableCell>
@@ -430,6 +453,31 @@ const GradesPage: React.FC = () => {
           </Grid>
         </Grid>
       </TabPanel>
+
+      {/* Error Messages */}
+      {statsError && (statsError.response?.status === 401 || statsError.response?.status === 403) && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          You are not authorized to view grade statistics. Please log in with the correct account or contact your administrator.
+        </Alert>
+      )}
+
+      {gradesError && (gradesError.response?.status === 401 || gradesError.response?.status === 403) && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          You are not authorized to view grades. Please log in with the correct account or contact your administrator.
+        </Alert>
+      )}
+
+      {distError && (distError.response?.status === 401 || distError.response?.status === 403) && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          You are not authorized to view grade distribution. Please log in with the correct account or contact your administrator.
+        </Alert>
+      )}
+
+      {perfError && (perfError.response?.status === 401 || perfError.response?.status === 403) && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          You are not authorized to view course performance. Please log in with the correct account or contact your administrator.
+        </Alert>
+      )}
     </Box>
   );
 };

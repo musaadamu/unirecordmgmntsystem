@@ -26,6 +26,7 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Alert,
 } from '@mui/material';
 import {
   Download,
@@ -56,125 +57,27 @@ const PaymentHistory: React.FC<PaymentHistoryProps> = ({ semester }) => {
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
+  // Real payment history data
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Mock payment history data
-  const mockPayments: Payment[] = [
-    {
-      _id: '1',
-      student: 'student1',
-      paymentItems: ['item1', 'item2'],
-      totalAmount: 225000,
-      paidAmount: 225000,
-      currency: 'NGN',
-      paymentMethod: 'remita',
-      paymentReference: 'RMT001234567',
-      transactionId: 'TXN001',
-      status: 'completed',
-      paymentDate: '2024-01-10T10:30:00Z',
-      description: 'First Semester Tuition Payment',
-      receipt: {
-        receiptNumber: 'RCP001',
-        downloadUrl: '/receipts/rcp001.pdf',
-        generatedAt: '2024-01-10T10:35:00Z',
-      },
-      metadata: {
-        gateway: 'remita',
-        gatewayReference: 'RMT001234567',
-      },
-      createdAt: '2024-01-10T10:00:00Z',
-      updatedAt: '2024-01-10T10:35:00Z',
-    },
-    {
-      _id: '2',
-      student: 'student1',
-      paymentItems: ['item3'],
-      totalAmount: 80000,
-      paidAmount: 80000,
-      currency: 'NGN',
-      paymentMethod: 'bank_transfer',
-      paymentReference: 'BT002345678',
-      transactionId: 'TXN002',
-      status: 'completed',
-      paymentDate: '2024-01-18T14:20:00Z',
-      description: 'Accommodation Fee Payment',
-      receipt: {
-        receiptNumber: 'RCP002',
-        downloadUrl: '/receipts/rcp002.pdf',
-        generatedAt: '2024-01-18T14:25:00Z',
-      },
-      metadata: {
-        gateway: 'bank_transfer',
-        gatewayReference: 'BT002345678',
-      },
-      createdAt: '2024-01-18T14:00:00Z',
-      updatedAt: '2024-01-18T14:25:00Z',
-    },
-    {
-      _id: '3',
-      student: 'student1',
-      paymentItems: ['item4'],
-      totalAmount: 15000,
-      paidAmount: 15000,
-      currency: 'NGN',
-      paymentMethod: 'paystack',
-      paymentReference: 'PS003456789',
-      transactionId: 'TXN003',
-      status: 'completed',
-      paymentDate: '2024-01-25T09:15:00Z',
-      description: 'Library Fee Payment',
-      receipt: {
-        receiptNumber: 'RCP003',
-        downloadUrl: '/receipts/rcp003.pdf',
-        generatedAt: '2024-01-25T09:20:00Z',
-      },
-      metadata: {
-        gateway: 'paystack',
-        gatewayReference: 'PS003456789',
-      },
-      createdAt: '2024-01-25T09:00:00Z',
-      updatedAt: '2024-01-25T09:20:00Z',
-    },
-    {
-      _id: '4',
-      student: 'student1',
-      paymentItems: ['item5'],
-      totalAmount: 50000,
-      paidAmount: 0,
-      currency: 'NGN',
-      paymentMethod: 'remita',
-      paymentReference: 'RMT004567890',
-      status: 'failed',
-      paymentDate: '2024-02-01T16:45:00Z',
-      description: 'Registration Fee Payment',
-      createdAt: '2024-02-01T16:30:00Z',
-      updatedAt: '2024-02-01T16:50:00Z',
-    },
-    {
-      _id: '5',
-      student: 'student1',
-      paymentItems: ['item6'],
-      totalAmount: 30000,
-      paidAmount: 30000,
-      currency: 'NGN',
-      paymentMethod: 'flutterwave',
-      paymentReference: 'FW005678901',
-      transactionId: 'TXN005',
-      status: 'completed',
-      paymentDate: '2024-02-05T11:30:00Z',
-      description: 'Sports Fee Payment',
-      receipt: {
-        receiptNumber: 'RCP005',
-        downloadUrl: '/receipts/rcp005.pdf',
-        generatedAt: '2024-02-05T11:35:00Z',
-      },
-      metadata: {
-        gateway: 'flutterwave',
-        gatewayReference: 'FW005678901',
-      },
-      createdAt: '2024-02-05T11:15:00Z',
-      updatedAt: '2024-02-05T11:35:00Z',
-    },
-  ];
+  React.useEffect(() => {
+    const fetchPayments = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        // You may want to pass filters here
+        const result = await import('@/services/paymentsService').then(m => m.paymentsService.getPaymentHistory());
+        setPayments(result.payments);
+      } catch (err: any) {
+        setError(err.message || 'Failed to fetch payment history');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPayments();
+  }, []);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-NG', {
@@ -238,7 +141,7 @@ const PaymentHistory: React.FC<PaymentHistoryProps> = ({ semester }) => {
   };
 
   const getFilteredPayments = () => {
-    return mockPayments.filter(payment => {
+    return payments.filter(payment => {
       // Status filter
       if (statusFilter !== 'all' && payment.status !== statusFilter) return false;
       
@@ -274,6 +177,13 @@ const PaymentHistory: React.FC<PaymentHistoryProps> = ({ semester }) => {
   const itemsPerPage = 10;
   const totalPages = Math.ceil(filteredPayments.length / itemsPerPage);
   const paginatedPayments = filteredPayments.slice((page - 1) * itemsPerPage, page * itemsPerPage);
+
+  if (loading) {
+    return <Box p={3}><Alert severity="info">Loading payment history...</Alert></Box>;
+  }
+  if (error) {
+    return <Box p={3}><Alert severity="error">{error}</Alert></Box>;
+  }
 
   return (
     <Box>

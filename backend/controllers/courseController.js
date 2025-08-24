@@ -1081,12 +1081,6 @@ const getCourseStats = async (req, res) => {
   }
 };
 
-// Make sure to add this to your module.exports:
-// module.exports = {
-//   // ... your other methods
-//   getCourseStats,  // Add this line
-//   // ... rest of your methods
-// };
 /**
  * Export course data
  */
@@ -1161,6 +1155,101 @@ const exportCourses = catchAsync(async (req, res) => {
   }
 });
 
+/**
+ * Get all course offerings (flattened view)
+ */
+const getAllCourseOfferings = catchAsync(async (req, res) => {
+  // Flatten all offerings from all courses
+  const courses = await Course.find({ isDeleted: { $ne: true } }).lean();
+  const offerings = [];
+  courses.forEach(course => {
+    if (Array.isArray(course.offerings)) {
+      course.offerings.forEach(offering => {
+        offerings.push({
+          ...offering,
+          courseId: course._id,
+          courseCode: course.courseCode,
+          courseName: course.courseName
+        });
+      });
+    }
+  });
+  res.json({ success: true, data: offerings });
+});
+
+/**
+ * Add a new course offering (global)
+ */
+const addCourseOfferingGlobal = catchAsync(async (req, res) => {
+  const { courseId, offering } = req.body;
+  if (!courseId || !offering) {
+    return res.status(400).json({ success: false, message: 'courseId and offering required' });
+  }
+  const course = await Course.findById(courseId);
+  if (!course) {
+    return res.status(404).json({ success: false, message: 'Course not found' });
+  }
+  course.offerings.push(offering);
+  await course.save();
+  res.json({ success: true, data: offering });
+});
+
+/**
+ * Get a single course offering by ID
+ */
+const getCourseOfferingById = catchAsync(async (req, res) => {
+  const { id } = req.params;
+  const courses = await Course.find({ 'offerings._id': id }).lean();
+  let found = null;
+  courses.forEach(course => {
+    const offering = course.offerings.find(o => o._id.toString() === id);
+    if (offering) {
+      found = { ...offering, courseId: course._id, courseCode: course.courseCode, courseName: course.courseName };
+    }
+  });
+  if (!found) {
+    return res.status(404).json({ success: false, message: 'Offering not found' });
+  }
+  res.json({ success: true, data: found });
+});
+
+/**
+ * Update a course offering (global)
+ */
+const updateCourseOfferingGlobal = catchAsync(async (req, res) => {
+  const { id } = req.params;
+  const { offering } = req.body;
+  const course = await Course.findOne({ 'offerings._id': id });
+  if (!course) {
+    return res.status(404).json({ success: false, message: 'Course not found' });
+  }
+  const idx = course.offerings.findIndex(o => o._id.toString() === id);
+  if (idx === -1) {
+    return res.status(404).json({ success: false, message: 'Offering not found' });
+  }
+  course.offerings[idx] = { ...course.offerings[idx], ...offering };
+  await course.save();
+  res.json({ success: true, data: course.offerings[idx] });
+});
+
+/**
+ * Delete a course offering (global)
+ */
+const deleteCourseOfferingGlobal = catchAsync(async (req, res) => {
+  const { id } = req.params;
+  const course = await Course.findOne({ 'offerings._id': id });
+  if (!course) {
+    return res.status(404).json({ success: false, message: 'Course not found' });
+  }
+  const idx = course.offerings.findIndex(o => o._id.toString() === id);
+  if (idx === -1) {
+    return res.status(404).json({ success: false, message: 'Offering not found' });
+  }
+  course.offerings.splice(idx, 1);
+  await course.save();
+  res.json({ success: true, message: 'Offering deleted' });
+});
+
 module.exports = {
   getAllCourses,
   searchCourses,
@@ -1179,5 +1268,10 @@ module.exports = {
   createBulkCourses,
   getCourseAnalytics,
   exportCourses,
-  getCourseStats
+  getCourseStats,
+  getAllCourseOfferings,
+  addCourseOfferingGlobal,
+  getCourseOfferingById,
+  updateCourseOfferingGlobal,
+  deleteCourseOfferingGlobal,
 };

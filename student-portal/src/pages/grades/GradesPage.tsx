@@ -62,55 +62,9 @@ const GradesPage: React.FC = () => {
   const [selectedSemester, setSelectedSemester] = useState('Fall 2024');
   const { user } = useAuthStore();
 
-  // Mock data for demonstration
-  const mockGPAData = {
-    current: {
-      semester: 'Fall',
-      academicYear: '2024',
-      gpa: 3.75,
-      credits: 18,
-      qualityPoints: 67.5,
-    },
-    cumulative: {
-      gpa: 3.68,
-      totalCredits: 75,
-      totalQualityPoints: 276,
-      completedCredits: 75,
-    },
-    byLevel: [
-      { level: '100', gpa: 3.5, credits: 30, qualityPoints: 105 },
-      { level: '200', gpa: 3.8, credits: 27, qualityPoints: 102.6 },
-      { level: '300', gpa: 3.75, credits: 18, qualityPoints: 67.5 },
-    ],
-    trend: [
-      { semester: 'Fall', academicYear: '2022', gpa: 3.2, credits: 15 },
-      { semester: 'Spring', academicYear: '2023', gpa: 3.4, credits: 15 },
-      { semester: 'Fall', academicYear: '2023', gpa: 3.6, credits: 15 },
-      { semester: 'Spring', academicYear: '2024', gpa: 3.8, credits: 12 },
-      { semester: 'Fall', academicYear: '2024', gpa: 3.75, credits: 18 },
-    ],
-  };
-
-  const mockAcademicStanding = {
-    current: 'excellent' as const,
-    requirements: {
-      minimumGPA: 2.0,
-      minimumCredits: 12,
-      maxConsecutiveProbation: 2,
-    },
-    warnings: [],
-    recommendations: [
-      {
-        type: 'course_selection' as const,
-        title: 'Consider Advanced Courses',
-        description: 'Your strong performance suggests you could handle more challenging coursework.',
-      },
-    ],
-  };
-
-  // Mock queries
-  const gpaQuery = { data: mockGPAData, isLoading: false, error: null };
-  const standingQuery = { data: mockAcademicStanding, isLoading: false, error: null };
+  // Real API queries
+  const gpaQuery = useQuery(['gpa', user?.id], () => gradesService.getGPA(user?.id), { enabled: !!user?.id });
+  const standingQuery = useQuery(['academicStanding', user?.id], () => gradesService.getAcademicStanding(user?.id), { enabled: !!user?.id });
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);

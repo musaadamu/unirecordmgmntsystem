@@ -103,7 +103,7 @@ const CoursesPage: React.FC = () => {
   const queryClient = useQueryClient();
 
   // Fetch courses with filters
-  const { data: coursesData, isLoading, error, refetch } = useQuery({
+  const { data: coursesData, isLoading, error: coursesError, refetch } = useQuery({
     queryKey: ['courses', { ...filters, search: searchTerm, page, limit: pageSize }],
     queryFn: () => courseService.getCourses({ ...filters, search: searchTerm, page, limit: pageSize }),
     staleTime: 5 * 60 * 1000,
@@ -407,7 +407,7 @@ const CoursesPage: React.FC = () => {
               <Box display="flex" justifyContent="center" py={8}>
                 <LoadingSpinner message="Loading courses..." />
               </Box>
-            ) : error ? (
+            ) : coursesError ? (
               <Box p={4} textAlign="center">
                 <Alert severity="error" sx={{ mb: 2 }}>
                   Failed to load courses. Please try again.
@@ -432,6 +432,12 @@ const CoursesPage: React.FC = () => {
             )}
           </CardContent>
         </Card>
+
+        {coursesError && ((coursesError as any)?.response?.status === 401 || (coursesError as any)?.response?.status === 403) && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            You are not authorized to view course information. Please log in with the correct account or contact your administrator.
+          </Alert>
+        )}
       </TabPanel>
 
       {/* Course Offerings Tab */}

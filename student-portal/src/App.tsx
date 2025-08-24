@@ -3,30 +3,30 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { Box } from '@mui/material';
 
 // Layout Components
-import Layout from '@/components/Layout/Layout';
-import AuthLayout from '@/components/Layout/AuthLayout';
+import Layout from './components/Layout/Layout';
+import AuthLayout from './components/Layout/AuthLayout';
 
 // Auth Components
-import LoginPage from '@/pages/auth/LoginPage';
-import ForgotPasswordPage from '@/pages/auth/ForgotPasswordPage';
-import ResetPasswordPage from '@/pages/auth/ResetPasswordPage';
+import LoginPage from './pages/auth/LoginPage';
+import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
+import ResetPasswordPage from './pages/auth/ResetPasswordPage';
 
 // Protected Pages
-import DashboardPage from '@/pages/dashboard/DashboardPage';
-import CoursesPage from '@/pages/courses/CoursesPage';
-import GradesPage from '@/pages/grades/GradesPage';
-import PaymentsPage from '@/pages/payments/PaymentsPage';
-import SchedulePage from '@/pages/schedule/SchedulePage';
-import ProfilePage from '@/pages/profile/ProfilePage';
-import NotificationsPage from '@/pages/notifications/NotificationsPage';
+import DashboardPage from './pages/dashboard/DashboardPage';
+import CoursesPage from './pages/courses/CoursesPage';
+import GradesPage from './pages/grades/GradesPage';
+import PaymentsPage from './pages/payments/PaymentsPage';
+import SchedulePage from './pages/schedule/SchedulePage';
+import ProfilePage from './pages/profile/ProfilePage';
+import NotificationsPage from './pages/notifications/NotificationsPage';
 
 // Utility Components
-import ProtectedRoute from '@/components/Auth/ProtectedRoute';
-import LoadingSpinner from '@/components/LoadingSpinner';
-import ErrorBoundary from '@/components/ErrorBoundary';
+import ProtectedRoute from './components/Auth/ProtectedRoute';
+import LoadingSpinner from './components/LoadingSpinner';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Hooks
-import { useAuthStore } from '@/stores/authStore';
+import { useAuthStore } from './stores/authStore';
 
 function App() {
   const { isAuthenticated, isLoading } = useAuthStore();

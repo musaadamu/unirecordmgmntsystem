@@ -1,9 +1,8 @@
 import React from 'react';
 import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Navigate
+  createBrowserRouter,
+  RouterProvider,
+  Navigate,
 } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { CssBaseline, Box } from '@mui/material';
@@ -29,6 +28,7 @@ import ReportsPage from './pages/reports/ReportsPage';
 import SettingsPage from './pages/settings/SettingsPage';
 import ProfilePage from './pages/profile/ProfilePage';
 import NotFoundPage from './pages/NotFoundPage';
+import AssignmentsPage from './pages/AssignmentsPage';
 
 // Store
 import { useAuthStore } from './store/authStore';
@@ -119,6 +119,45 @@ const queryClient = new QueryClient({
 const App: React.FC = () => {
   const { isAuthenticated, isLoading } = useAuthStore();
 
+  const router = createBrowserRouter([
+    {
+      path: '/login',
+      element: isAuthenticated ? <Navigate to="/dashboard" replace /> : <LoginPage />,
+    },
+    {
+      path: '/',
+      element: (
+        <ProtectedRoute>
+          <Layout />
+        </ProtectedRoute>
+      ),
+      children: [
+        { index: true, element: <Navigate to="/dashboard" replace /> },
+  { path: 'dashboard', element: <DashboardPage /> },
+  { path: 'users', element: <UsersPage /> },
+  { path: 'students', element: <StudentsPage /> },
+  { path: 'courses', element: <CoursesPage /> },
+  { path: 'grades', element: <GradesPage /> },
+  { path: 'enrollments', element: <EnrollmentsPage /> },
+  { path: 'payments', element: <PaymentsPage /> },
+  { path: 'attendance', element: <AttendancePage /> },
+  { path: 'reports', element: <ReportsPage /> },
+  { path: 'settings', element: <SettingsPage /> },
+  { path: 'profile', element: <ProfilePage /> },
+  { path: 'assignments', element: <AssignmentsPage /> },
+      ],
+    },
+    {
+      path: '*',
+      element: <NotFoundPage />,
+    },
+  ], {
+    future: {
+      v7_startTransition: true,
+      v7_relativeSplatPath: true,
+    },
+  });
+
   if (isLoading) {
     return (
       <Box
@@ -136,53 +175,7 @@ const App: React.FC = () => {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <Router>
-          <Routes>
-            {/* Public Routes */}
-            <Route
-              path="/login"
-              element={
-                isAuthenticated ? <Navigate to="/dashboard" replace /> : <LoginPage />
-              }
-            />
-
-            {/* Protected Routes */}
-            <Route
-              path="/"
-              element={
-                <ProtectedRoute>
-                  <Layout />
-                </ProtectedRoute>
-              }
-            >
-              <Route index element={<Navigate to="/dashboard" replace />} />
-              <Route path="dashboard" element={<DashboardPage />} />
-              
-              {/* User Management */}
-              <Route path="users" element={<UsersPage />} />
-              <Route path="students" element={<StudentsPage />} />
-              
-              {/* Academic Management */}
-              <Route path="courses" element={<CoursesPage />} />
-              <Route path="grades" element={<GradesPage />} />
-              <Route path="enrollments" element={<EnrollmentsPage />} />
-              
-              {/* Administrative */}
-              <Route path="payments" element={<PaymentsPage />} />
-              <Route path="attendance" element={<AttendancePage />} />
-              
-              {/* Reports and Settings */}
-              <Route path="reports" element={<ReportsPage />} />
-              <Route path="settings" element={<SettingsPage />} />
-              <Route path="profile" element={<ProfilePage />} />
-            </Route>
-
-            {/* 404 Route */}
-            <Route path="*" element={<NotFoundPage />} />
-          </Routes>
-        </Router>
-
-        {/* Toast Notifications */}
+        <RouterProvider router={router} />
         <Toaster
           position="top-right"
           toastOptions={{

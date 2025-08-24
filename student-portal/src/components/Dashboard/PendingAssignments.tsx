@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import {
   Card,
   CardContent,
@@ -11,7 +11,6 @@ import {
   Alert,
   Button
 } from '@mui/material';
-import api from '../../services/api';
 
 interface Assignment {
   id: string | number;
@@ -20,42 +19,13 @@ interface Assignment {
   dueDate: string;
 }
 
-const PendingAssignments = () => {
-  const [assignments, setAssignments] = useState<Assignment[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+interface PendingAssignmentsProps {
+  assignments: Assignment[];
+  loading: boolean;
+  error?: string | null;
+}
 
-  useEffect(() => {
-    const fetchAssignments = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const response = await api.get('/assignments/pending');
-        
-        // Handle the API response structure: { success: true, message: string, data: Assignment[] }
-        const assignmentData = response.data;
-        
-        if (assignmentData && Array.isArray(assignmentData.data)) {
-          setAssignments(assignmentData.data);
-        } else if (Array.isArray(assignmentData)) {
-          // Fallback for direct array response
-          setAssignments(assignmentData);
-        } else {
-          console.warn('Unexpected API response structure:', assignmentData);
-          setAssignments([]);
-        }
-      } catch (err) {
-        console.error('Error fetching assignments:', err);
-        setError('Failed to fetch assignments.');
-        setAssignments([]); // Ensure assignments is always an array
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchAssignments();
-  }, []);
-
+const PendingAssignments: React.FC<PendingAssignmentsProps> = ({ assignments, loading, error }) => {
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" height="200px">

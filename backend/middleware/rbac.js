@@ -4,12 +4,12 @@ const Role = require('../models/Role');
 const Permission = require('../models/Permission');
 const UserRole = require('../models/UserRole');
 const AuditLog = require('../models/AuditLog');
-const Redis = require('redis');
 
 // Redis client for caching (optional)
 let redisClient = null;
 try {
   if (process.env.REDIS_URL) {
+    const Redis = require('redis');
     redisClient = Redis.createClient({ url: process.env.REDIS_URL });
     redisClient.on('error', (err) => {
       console.error('Redis Client Error', err);

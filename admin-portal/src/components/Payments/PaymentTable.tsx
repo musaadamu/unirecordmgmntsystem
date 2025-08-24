@@ -344,8 +344,8 @@ const PaymentTable: React.FC<PaymentTableProps> = ({
       {pagination && (
         <TablePagination
           component="div"
-          count={pagination.totalItems}
-          page={pagination.currentPage - 1}
+          count={typeof pagination.totalItems === 'number' ? pagination.totalItems : 0}
+          page={typeof pagination.currentPage === 'number' ? pagination.currentPage - 1 : 0}
           onPageChange={(_, newPage) => onPageChange(newPage + 1)}
           rowsPerPage={25}
           onRowsPerPageChange={(e) => onPageSizeChange(parseInt(e.target.value, 10))}

@@ -1,3 +1,8 @@
+interface TabPanelProps {
+  children?: React.ReactNode;
+  index: number;
+  value: number;
+}
 import React, { useState } from 'react';
 import {
   Box,
@@ -8,9 +13,6 @@ import {
   Card,
   CardContent,
   Button,
-  Chip,
-  Avatar,
-  LinearProgress,
   IconButton,
   Menu,
   MenuItem,
@@ -22,28 +24,20 @@ import {
   Assignment,
   Grade,
   MoreVert,
-  Add,
   Search,
   FilterList,
 } from '@mui/icons-material';
 import { useQuery } from '@tanstack/react-query';
 
-import courseService, { EnrolledCourse } from '@/services/courseService';
+import courseService from '@/services/courseService';
 import { useAuthStore } from '@/stores/authStore';
 import CourseCard from '@/components/Courses/CourseCard';
 import CourseCatalog from '@/components/Courses/CourseCatalog';
 import CourseSchedule from '@/components/Courses/CourseSchedule';
-import LoadingSpinner from '@/components/LoadingSpinner';
 
-interface TabPanelProps {
-  children?: React.ReactNode;
-  index: number;
-  value: number;
-}
 
-function TabPanel(props: TabPanelProps) {
-  const { children, value, index, ...other } = props;
 
+const TabPanel: React.FC<TabPanelProps> = ({ children, value, index, ...other }) => {
   return (
     <div
       role="tabpanel"
@@ -55,227 +49,53 @@ function TabPanel(props: TabPanelProps) {
       {value === index && <Box sx={{ py: 3 }}>{children}</Box>}
     </div>
   );
-}
+};
 
 const CoursesPage: React.FC = () => {
-  const [tabValue, setTabValue] = useState(0);
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const { user } = useAuthStore();
-
-  // Mock enrolled courses data
-  const mockEnrolledCourses: EnrolledCourse[] = [
-    {
-      _id: '1',
-      courseCode: 'CS101',
-      courseName: 'Introduction to Computer Science',
-      description: 'Fundamental concepts of computer science including programming, algorithms, and data structures.',
-      credits: 3,
-      department: 'Computer Science',
-      faculty: 'Faculty of Science',
-      level: '100',
-      semester: 'Fall',
-      academicYear: '2024',
-      prerequisites: [],
-      instructor: {
-        _id: 'inst1',
-        name: 'Dr. Sarah Smith',
-        email: 'sarah.smith@university.edu',
-        title: 'Professor',
-        department: 'Computer Science',
-      },
-      schedule: [
-        {
-          day: 'Monday',
-          startTime: '09:00',
-          endTime: '10:30',
-          type: 'lecture',
-          location: {
-            building: 'Science Building',
-            room: 'Room 201',
-            campus: 'Main Campus',
-          },
-        },
-        {
-          day: 'Wednesday',
-          startTime: '14:00',
-          endTime: '16:00',
-          type: 'lab',
-          location: {
-            building: 'Computer Lab',
-            room: 'Lab 1',
-            campus: 'Main Campus',
-          },
-        },
-      ],
-      capacity: 50,
-      enrolled: 45,
-      waitlist: 3,
-      status: 'active',
-      enrollmentStatus: 'open',
-      materials: [
-        {
-          _id: 'mat1',
-          title: 'Course Syllabus',
-          type: 'pdf',
-          url: '/materials/cs101-syllabus.pdf',
-          uploadedAt: '2024-01-01T00:00:00Z',
-        },
-      ],
-      assessments: [
-        {
-          _id: 'assess1',
-          name: 'Midterm Exam',
-          type: 'midterm',
-          weight: 30,
-          maxPoints: 100,
-          dueDate: '2024-03-15T00:00:00Z',
-        },
-      ],
-      enrollment: {
-        _id: 'enroll1',
-        enrolledAt: '2024-01-15T00:00:00Z',
-        status: 'enrolled',
-        grade: {
-          letterGrade: 'B+',
-          gradePoints: 3.3,
-          percentage: 85,
-        },
-        attendance: {
-          present: 22,
-          absent: 3,
-          total: 25,
-          percentage: 88,
-        },
-        progress: {
-          completedAssignments: 8,
-          totalAssignments: 10,
-          percentage: 80,
-        },
-      },
-      createdAt: '2024-01-01T00:00:00Z',
-      updatedAt: '2024-01-15T00:00:00Z',
-    },
-    {
-      _id: '2',
-      courseCode: 'MATH201',
-      courseName: 'Calculus II',
-      description: 'Advanced calculus including integration techniques, series, and differential equations.',
-      credits: 4,
-      department: 'Mathematics',
-      faculty: 'Faculty of Science',
-      level: '200',
-      semester: 'Fall',
-      academicYear: '2024',
-      prerequisites: [
-        {
-          courseCode: 'MATH101',
-          courseName: 'Calculus I',
-        },
-      ],
-      instructor: {
-        _id: 'inst2',
-        name: 'Prof. Michael Johnson',
-        email: 'michael.johnson@university.edu',
-        title: 'Associate Professor',
-        department: 'Mathematics',
-      },
-      schedule: [
-        {
-          day: 'Tuesday',
-          startTime: '10:00',
-          endTime: '11:30',
-          type: 'lecture',
-          location: {
-            building: 'Mathematics Building',
-            room: 'Room 105',
-            campus: 'Main Campus',
-          },
-        },
-        {
-          day: 'Thursday',
-          startTime: '10:00',
-          endTime: '11:30',
-          type: 'lecture',
-          location: {
-            building: 'Mathematics Building',
-            room: 'Room 105',
-            campus: 'Main Campus',
-          },
-        },
-      ],
-      capacity: 40,
-      enrolled: 38,
-      waitlist: 0,
-      status: 'active',
-      enrollmentStatus: 'open',
-      materials: [],
-      assessments: [],
-      enrollment: {
-        _id: 'enroll2',
-        enrolledAt: '2024-01-15T00:00:00Z',
-        status: 'enrolled',
-        attendance: {
-          present: 20,
-          absent: 2,
-          total: 22,
-          percentage: 91,
-        },
-        progress: {
-          completedAssignments: 6,
-          totalAssignments: 8,
-          percentage: 75,
-        },
-      },
-      createdAt: '2024-01-01T00:00:00Z',
-      updatedAt: '2024-01-15T00:00:00Z',
-    },
-  ];
-
-  // Mock query for enrolled courses
-  const enrolledCoursesQuery = {
-    data: mockEnrolledCourses,
-    isLoading: false,
-    error: null,
-  };
-
+  // Helper: Tab change handler
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
 
-  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-  };
-
+  // Helper: Overall progress
   const getOverallProgress = () => {
-    if (!enrolledCoursesQuery.data) return 0;
+    if (!enrolledCoursesQuery.data || enrolledCoursesQuery.data.length === 0) return 0;
     const totalProgress = enrolledCoursesQuery.data.reduce(
-      (sum, course) => sum + (course.enrollment.progress?.percentage || 0),
+      (sum, course) => sum + (course.enrollment?.progress?.percentage || 0),
       0
     );
     return Math.round(totalProgress / enrolledCoursesQuery.data.length);
   };
 
+  // Helper: Overall attendance
   const getOverallAttendance = () => {
-    if (!enrolledCoursesQuery.data) return 0;
+    if (!enrolledCoursesQuery.data || enrolledCoursesQuery.data.length === 0) return 0;
     const totalAttendance = enrolledCoursesQuery.data.reduce(
-      (sum, course) => sum + course.enrollment.attendance.percentage,
+      (sum, course) => sum + (course.enrollment?.attendance?.percentage || 0),
       0
     );
     return Math.round(totalAttendance / enrolledCoursesQuery.data.length);
   };
+  const [tabValue, setTabValue] = useState(0);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const { user } = useAuthStore();
 
-  if (enrolledCoursesQuery.isLoading) {
-    return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-        <LoadingSpinner message="Loading your courses..." />
-      </Box>
-    );
-  }
 
+  // Real API query for enrolled courses
+  const enrolledCoursesQuery = useQuery(['enrolledCourses', user?._id], () =>
+    courseService.getEnrolledCourses(user?._id),
+    {
+      enabled: !!user?._id,
+    }
+  );
+
+  // Fix: Define menu handlers
+  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
   return (
     <Box>
       {/* Page Header */}

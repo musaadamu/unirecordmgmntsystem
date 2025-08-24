@@ -100,7 +100,7 @@ const PaymentsPage: React.FC = () => {
   const queryClient = useQueryClient();
 
   // Fetch payments with filters
-  const { data: paymentsData, isLoading, error, refetch } = useQuery({
+  const { data: paymentsData, isLoading, error: paymentsError, refetch } = useQuery({
     queryKey: ['payments', { ...filters, search: searchTerm, page, limit: pageSize }],
     queryFn: () => paymentService.getPayments({ ...filters, search: searchTerm, page, limit: pageSize }),
     staleTime: 5 * 60 * 1000,
@@ -241,7 +241,7 @@ const PaymentsPage: React.FC = () => {
   const stats = paymentStats ? [
     {
       title: 'Total Payments',
-      value: paymentStats.totalPayments.toLocaleString(),
+      value: paymentStats.totalPayments != null ? paymentStats.totalPayments.toLocaleString() : 'N/A',
       change: '+12%',
       trend: 'up' as const,
       icon: <Payment />,
@@ -250,7 +250,7 @@ const PaymentsPage: React.FC = () => {
     },
     {
       title: 'Total Amount',
-      value: `₦${paymentStats.totalAmount.toLocaleString()}`,
+      value: paymentStats.totalAmount != null ? `₦${paymentStats.totalAmount.toLocaleString()}` : 'N/A',
       change: '+8%',
       trend: 'up' as const,
       icon: <AttachMoney />,
@@ -259,16 +259,16 @@ const PaymentsPage: React.FC = () => {
     },
     {
       title: 'Pending Payments',
-      value: paymentStats.pendingPayments.toLocaleString(),
+      value: paymentStats.pendingPayments != null ? paymentStats.pendingPayments.toLocaleString() : 'N/A',
       change: '-5%',
       trend: 'down' as const,
       icon: <AccountBalance />,
       color: '#ed6c02',
-      subtitle: `₦${paymentStats.pendingAmount.toLocaleString()}`,
+      subtitle: paymentStats.pendingAmount != null ? `₦${paymentStats.pendingAmount.toLocaleString()}` : 'N/A',
     },
     {
       title: 'Success Rate',
-      value: `${Math.round((paymentStats.completedPayments / paymentStats.totalPayments) * 100)}%`,
+      value: paymentStats.completedPayments != null && paymentStats.totalPayments ? `${Math.round((paymentStats.completedPayments / paymentStats.totalPayments) * 100)}%` : 'N/A',
       change: '+3%',
       trend: 'up' as const,
       icon: <TrendingUp />,
@@ -355,6 +355,77 @@ const PaymentsPage: React.FC = () => {
 
       {/* All Payments Tab */}
       <TabPanel value={tabValue} index={0}>
+        {/* Payment Timeline Section */}
+        <Grid container spacing={3} mb={3}>
+          <Grid item xs={12} md={6} lg={4}>
+            <Card>
+              <CardContent>
+                <Typography variant="h6" fontWeight="bold" gutterBottom>
+                  Payment Timeline
+                </Typography>
+                {payments.length > 0 ? (
+                  payments.slice(0, 4).map((payment) => (
+                    <Box key={payment._id} mb={2}>
+                      <Typography variant="subtitle2" fontWeight="bold">
+                        {payment.description}
+                      </Typography>
+                      <Chip
+                        label={payment.status}
+                        color={payment.status === 'completed' ? 'success' : payment.status === 'pending' ? 'warning' : 'default'}
+                        size="small"
+                        sx={{ mr: 1 }}
+                      />
+                      <Typography variant="body2" color="text.secondary">
+                        ₦{payment.amount.toLocaleString()}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        Due: {payment.dueDate ? new Date(payment.dueDate).toLocaleDateString() : 'N/A'}
+                        {payment.paidDate && ` • Paid: ${new Date(payment.paidDate).toLocaleDateString()}`}
+                      </Typography>
+                    </Box>
+                  ))
+                ) : (
+                  <Typography variant="body2" color="text.secondary">
+                    No payments found.
+                  </Typography>
+                )}
+              </CardContent>
+            </Card>
+          </Grid>
+
+          {/* Recent Transactions Section */}
+          <Grid item xs={12} md={6} lg={4}>
+            <Card>
+              <CardContent>
+                <Typography variant="h6" fontWeight="bold" gutterBottom>
+                  Recent Transactions
+                </Typography>
+                {payments.filter(p => p.status === 'completed').length > 0 ? (
+                  payments.filter(p => p.status === 'completed').slice(0, 4).map((payment) => (
+                    <Box key={payment._id} mb={2}>
+                      <Typography variant="subtitle2" fontWeight="bold">
+                        {payment.description}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        ₦{payment.amount.toLocaleString()}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {payment.paidDate ? new Date(payment.paidDate).toLocaleDateString() : 'N/A'}
+                        {payment.paymentMethod && ` • ${payment.paymentMethod.replace('_', ' ').toUpperCase()}`}
+                      </Typography>
+                      <Chip label={payment.status} color="success" size="small" sx={{ mt: 1 }} />
+                    </Box>
+                  ))
+                ) : (
+                  <Typography variant="body2" color="text.secondary">
+                    No recent transactions found.
+                  </Typography>
+                )}
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+
         {/* Search and Filters */}
         <Card sx={{ mb: 3 }}>
           <CardContent>
@@ -403,7 +474,7 @@ const PaymentsPage: React.FC = () => {
               <Box display="flex" justifyContent="center" py={8}>
                 <LoadingSpinner message="Loading payments..." />
               </Box>
-            ) : error ? (
+            ) : paymentsError ? (
               <Box p={4} textAlign="center">
                 <Alert severity="error" sx={{ mb: 2 }}>
                   Failed to load payments. Please try again.
@@ -429,6 +500,12 @@ const PaymentsPage: React.FC = () => {
             )}
           </CardContent>
         </Card>
+
+        {paymentsError && (paymentsError.response?.status === 401 || paymentsError.response?.status === 403) && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            You are not authorized to view payment information. Please log in with the correct account or contact your administrator.
+          </Alert>
+        )}
       </TabPanel>
 
       {/* Remita Payments Tab */}

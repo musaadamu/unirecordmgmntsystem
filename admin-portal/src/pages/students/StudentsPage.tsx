@@ -38,7 +38,7 @@ const StudentsPage: React.FC = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   // Fetch students (users with role 'student')
-  const { data: studentsData, isLoading, error, refetch } = useQuery({
+  const { data: studentsData, isLoading, error: studentsError, refetch } = useQuery({
     queryKey: ['users', { role: 'student', search: searchTerm }],
     queryFn: () => userService.getUsers({ role: 'student', search: searchTerm }),
     staleTime: 5 * 60 * 1000,
@@ -187,7 +187,7 @@ const StudentsPage: React.FC = () => {
             <Box display="flex" justifyContent="center" py={8}>
               <LoadingSpinner message="Loading students..." />
             </Box>
-          ) : error ? (
+          ) : studentsError ? (
             <Box textAlign="center" py={8}>
               <Alert severity="error" sx={{ mb: 2 }}>
                 Failed to load students. Please try again.
@@ -198,6 +198,12 @@ const StudentsPage: React.FC = () => {
             </Box>
           ) : (
             <Box>
+              {studentsError && (studentsError.response?.status === 401 || studentsError.response?.status === 403) && (
+                <Alert severity="error" sx={{ mb: 2 }}>
+                  You are not authorized to view student information. Please log in with the correct account or contact your administrator.
+                </Alert>
+              )}
+
               <Typography variant="h6" gutterBottom>
                 Student List ({pagination?.totalItems || 0} students)
               </Typography>
