@@ -63,8 +63,9 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
   if (!isAuthenticated || !token) {
     console.log('Redirecting to login: isAuthenticated=', isAuthenticated, 'token=', token, 'location=', location.pathname);
-    // Prevent redirect loop if already on login page
-    if (location.pathname !== '/login') {
+    // Prevent redirect loop if already on public auth routes
+    const publicAuthRoutes = ['/login', '/forgot-password', '/reset-password'];
+    if (!publicAuthRoutes.includes(location.pathname)) {
       return <Navigate to="/login" state={{ from: location }} replace />;
     }
   }

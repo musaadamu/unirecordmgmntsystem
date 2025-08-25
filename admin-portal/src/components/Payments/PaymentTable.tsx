@@ -99,7 +99,7 @@ const PaymentTable: React.FC<PaymentTableProps> = ({
     setSelectedPayment(null);
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string): 'success' | 'warning' | 'info' | 'error' | 'default' | 'secondary' => {
     switch (status) {
       case 'completed':
         return 'success';
@@ -118,7 +118,7 @@ const PaymentTable: React.FC<PaymentTableProps> = ({
     }
   };
 
-  const getPaymentTypeColor = (type: string) => {
+  const getPaymentTypeColor = (type: string): 'primary' | 'secondary' | 'info' | 'warning' | 'error' | 'success' | 'default' => {
     switch (type) {
       case 'tuition':
         return 'primary';
@@ -218,7 +218,7 @@ const PaymentTable: React.FC<PaymentTableProps> = ({
                         sx={{
                           width: 40,
                           height: 40,
-                          bgcolor: getPaymentTypeColor(payment.paymentType) + '.main',
+                          bgcolor: `${getPaymentTypeColor(payment.paymentType)}.main`,
                         }}
                       >
                         {payment.student.personalInfo.firstName[0]}{payment.student.personalInfo.lastName[0]}
@@ -264,7 +264,7 @@ const PaymentTable: React.FC<PaymentTableProps> = ({
                   <TableCell>
                     <Chip
                       label={payment.status}
-                      color={getStatusColor(payment.status) as any}
+                      color={getStatusColor(payment.status)}
                       size="small"
                       icon={payment.status === 'completed' ? <CheckCircle /> : undefined}
                     />

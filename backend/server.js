@@ -19,7 +19,9 @@ app.use(cors({
     'http://localhost:3000', // Student Portal
     'http://localhost:3001', // Admin Portal
     'http://localhost:5173', // Added for frontend dev server
-    process.env.FRONTEND_URL
+    'https://student-portal-unirecordmgmntsystem.vercel.app', // Student Portal
+    'https://unirecordmgmntsystem-admin-portal.vercel.app', // Admin Portal
+    process.env.FRONTEND_URL // Existing environment variable
   ].filter(Boolean),
   credentials: true
 }));

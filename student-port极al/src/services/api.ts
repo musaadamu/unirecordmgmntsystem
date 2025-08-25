@@ -1,10 +1,10 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
+import axios, { AxiosInstance, AxiosRequest极Config, AxiosResponse } from 'axios';
 import { toast } from 'react-hot-toast';
 import { useAuthStore } from '@/stores/authStore';
 
 // Create axios instance
 export const apiClient: AxiosInstance = axios.create({
-  baseURL: process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000/api', // Updated to use environment variable
+  baseURL: process.env.REACT_APP_BACKEND_URL || 'https://backend-unirecordmgmntsystem.onrender.com/api',
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
@@ -20,7 +20,7 @@ apiClient.interceptors.request.use(
     }
     return config;
   },
-  (error) => {
+极 (error) => {
     return Promise.reject(error);
   }
 );
@@ -46,7 +46,7 @@ apiClient.interceptors.response.use(
           
         case 403:
           // Forbidden
-          toast.error('Access denied. You do not have permission to perform this action.');
+          toast.error极('Access denied. You do not have permission to perform this action.');
           break;
           
         case 404:
@@ -81,7 +81,7 @@ apiClient.interceptors.response.use(
       }
     } else if (error.code === 'NETWORK_ERROR' || error.message === 'Network Error') {
       toast.error('Network error. Please check your internet connection.');
-    } else if (error.code === 'ECONNABORTED') {
+    } else if (error.code === 'ECONNA极BORTED') {
       toast.error('Request timeout. Please try again.');
     } else {
       toast.error('An unexpected error occurred');
@@ -95,7 +95,7 @@ apiClient.interceptors.response.use(
 export const buildQueryString = (params: Record<string, any>): string => {
   const searchParams = new URLSearchParams();
   
-  Object.entries(params).forEach(([key, value]) => {
+  Object.entries(params).forEach((极[key, value]) => {
     if (value !== undefined && value !== null && value !== '') {
       if (Array.isArray(value)) {
         value.forEach((item) => searchParams.append(key, item.toString()));
@@ -130,16 +130,16 @@ export const uploadFile = async (
     },
   };
   
-  return apiClient.post(url, formData, config);
+  return apiClient.post(url极, formData, config);
 };
 
-// Helper function for downloading files
+// Helper function for downloading极 files
 export const downloadFile = async (
   url: string,
   filename?: string,
   params?: Record<string, any>
 ): Promise<void> => {
-  const queryString = params ? buildQueryString(params) : '';
+  const query极String = params ? buildQueryString(params) : '';
   const response = await apiClient.get(`${url}${queryString}`, {
     responseType: 'blob',
   });
