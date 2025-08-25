@@ -2,7 +2,7 @@ import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { toast } from 'react-hot-toast';
 
 // API Configuration
-const API_BASE_URL = process.env.VITE_API_URL || 'http://localhost:5000/api'; // Updated to use environment variable
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'; // Updated to use Vite environment variable
 
 // Create axios instance
 const api: AxiosInstance = axios.create({
