@@ -4,7 +4,7 @@ import { useAuthStore } from '@/stores/authStore';
 
 // Create axios instance
 export const apiClient: AxiosInstance = axios.create({
-  baseURL: process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000/api', // Updated to use environment variable
+  baseURL: import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000/api', // Updated to use Vite environment variable
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
