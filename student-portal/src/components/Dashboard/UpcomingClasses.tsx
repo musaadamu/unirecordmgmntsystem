@@ -87,9 +87,13 @@ const UpcomingClasses: React.FC<UpcomingClassesProps> = ({
   };
 
   const formatClassTime = (startTime: string, endTime: string) => {
-    const start = parseISO(startTime);
-    const end = parseISO(endTime);
-    return `${format(start, 'h:mm a')} - ${format(end, 'h:mm a')}`;
+    try {
+      const start = parseISO(startTime);
+      const end = parseISO(endTime);
+      return `${format(start, 'h:mm a')} - ${format(end, 'h:mm a')}`;
+    } catch (error) {
+      return 'Invalid time';
+    }
   };
 
   const formatClassDate = (dateString: string) => {

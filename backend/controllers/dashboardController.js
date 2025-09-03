@@ -137,14 +137,14 @@ exports.getUpcomingClasses = (req, res) => {
         }
       },
       type: 'lecture',
-      startTime: '09:00',
-      endTime: '10:30',
+      startTime: '2024-01-15T09:00:00Z',
+      endTime: '2024-01-15T10:30:00Z',
       location: {
         building: 'Tech Building',
         room: '101',
         campus: 'Main Campus'
       },
-      date: '2024-01-15',
+      date: '2024-01-15T00:00:00Z',
       status: 'scheduled'
     },
     {
@@ -159,14 +159,14 @@ exports.getUpcomingClasses = (req, res) => {
         }
       },
       type: 'tutorial',
-      startTime: '14:00',
-      endTime: '15:30',
+      startTime: '2024-01-16T14:00:00Z',
+      endTime: '2024-01-16T15:30:00Z',
       location: {
         building: 'Math Building',
         room: '205',
         campus: 'Main Campus'
       },
-      date: '2024-01-16',
+      date: '2024-01-16T00:00:00Z',
       status: 'scheduled'
     }
   ].slice(0, limit);
