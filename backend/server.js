@@ -90,6 +90,7 @@ app.use('/api/admin', require('./routes/rbac'));
 app.use('/api/notifications', require('./routes/notifications'));
 
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/student/dashboard', require('./routes/studentDashboard'));
 app.use('/api/assignments', assignmentsRoutes);
 app.use('/api/course-offerings', require('./routes/courseOfferings'));
 
